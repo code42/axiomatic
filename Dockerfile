@@ -50,5 +50,5 @@ COPY --from=builder /go/bin/axiomatic /go/bin/axiomatic
 # Use an unprivileged user.
 USER appuser:appuser
 
-# Run the hello binary.
+# Run the binary.
 ENTRYPOINT ["/go/bin/axiomatic"]
