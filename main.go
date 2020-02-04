@@ -41,7 +41,6 @@ func main() {
 	log.Println("Axiomatic Server Starting")
 	log.Println("AXIOMATIC_IP:", AxiomaticIP)
 	log.Println("AXIOMATIC_PORT:", AxiomaticPort)
-	log.Println("AXIOMATIC_PORT:", AxiomaticPort)
 	log.Println("NOMAD_SERVER:", NomadServerURL)
 	http.HandleFunc("/health", handleHealth)
 	http.HandleFunc("/webhook", handleWebhook)
