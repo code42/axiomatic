@@ -23,10 +23,12 @@ RUN adduser \
     --uid "${UID}" \
     "${USER}"
 WORKDIR $GOPATH/src/mypackage/myapp/
-COPY . .
 
 # Fetch dependencies.
-RUN go get -d -v
+COPY go.* ./
+RUN go mod download
+
+COPY *.go ./
 
 # Build the binary
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
