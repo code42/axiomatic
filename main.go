@@ -82,12 +82,10 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 	case *github.PingEvent:
 		log.Println("GitHub Pinged the Webhook")
 	case *github.PushEvent:
-		jobName := strings.Join([]string{"axiomatic", e.Repo.GetFullName()}, "-")
-
 		jobArgs := NomadJobData{
 			GitRepoURL: e.Repo.GetCloneURL(),
 			HeadSHA:    e.GetAfter(),
-			Name:       jobName,
+			Name:       strings.Join([]string{"axiomatic", e.Repo.GetFullName()}, "-"),
 		}
 		if debug {
 			log.Printf("jobArgs: %+v\n", jobArgs)
@@ -103,13 +101,13 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 			log.Println("jobText:", jobText)
 		}
 
-		err = submitNomadJob(jobName, jobText)
+		err = submitNomadJob(jobArgs.Name, jobText)
 		if err != nil {
 			log.Println("submitJob Error:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Println("submitJob Success:", jobName)
+		log.Printf("submitJob Success: %s (%s)", jobArgs.Name, jobArgs.HeadSHA)
 		fmt.Fprintln(w, "Nomad Job Submitted")
 	default:
 		log.Printf("WARN: unknown event type %s\n", github.WebHookType(r))
