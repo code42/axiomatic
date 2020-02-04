@@ -119,7 +119,7 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 
 // renderNomadJob combines a template with supplied args and returns a Nomad job definition as a string
 func renderNomadJob(jobArgs NomadJobData) (*bytes.Buffer, error) {
-	t := template.Must(template.New("job").Parse(jobTemplate))
+	t := template.Must(template.New("job").Parse(templateNomadJob()))
 	buf := &bytes.Buffer{}
 	err := t.Execute(buf, jobArgs)
 	if err != nil {
@@ -157,4 +157,54 @@ func submitNomadJob(jobName string, jobBody *bytes.Buffer) error {
 		return errors.New(response.Status)
 	}
 	return nil
+}
+
+// templateNomadJob returns a templated,json formatted, Nomad job definition as a string
+func templateNomadJob() string {
+	const jobTemplate = `
+{
+	"Job": {
+		"Datacenters": [
+		"dc1"
+		],
+		"ID": "{{ .Name }}",
+		"Name": "{{ .Name }}",
+		"Region": "global",
+		"TaskGroups": [
+		{
+			"Name": "dir2consul",
+			"Tasks": [
+			{
+				"Artifacts": [
+				{
+					"GetterMode": "any",
+					"GetterOptions": null,
+					"GetterSource": "{{ .GitRepoURL }}",
+					"RelativeDest": "local/"
+				}
+				],
+				"Config": {
+					"image": "jimrazmus/awscli",
+					"args": [
+						"aws",
+						"--version"
+					]
+				},
+				"Driver": "docker",
+				"Env": null,
+				"Meta": {
+					"commit-SHA": "{{ .HeadSHA }}"
+				},
+				"Name": "dir2consul",
+				"Vault": null
+			}
+			]
+		}
+		],
+		"Type": "batch",
+		"VaultToken": ""
+	}
+}
+`
+	return jobTemplate
 }
