@@ -18,7 +18,7 @@ import (
 const debug = false
 
 // AxiomaticIP is the IP address to bind
-var AxiomaticIP = getenv("AXIOMATIC_IP", "")
+var AxiomaticIP = getenv("AXIOMATIC_IP", "127.0.0.1")
 
 // AxiomaticPort is the port number to bind
 var AxiomaticPort = getenv("AXIOMATIC_PORT", "8181")
