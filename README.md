@@ -14,8 +14,10 @@ Axiomatic uses environment variables to override the default configuration value
 
 ## Running
 
-docker pull jimrazmus/axiomatic:vN.N.N
-docker run -p 80:8181 --env-file=.env jimrazmus/axiomatic:vN.N.N
+```bash
+#> docker pull jimrazmus/axiomatic:vN.N.N
+#> docker run -p 80:8181 --env-file=.env jimrazmus/axiomatic:vN.N.N
+```
 
 ## Health Check
 
