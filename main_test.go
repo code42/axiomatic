@@ -44,11 +44,12 @@ func TestGetenvReturnsDefault(t *testing.T) {
 }
 
 func TestRenderNomadJobSucceeds(t *testing.T) {
-	f := func(a string, b string, c string) bool {
+	f := func(a string, b string, c string, d string) bool {
 		jobArgs := NomadJobData{
 			GitRepoURL: a,
 			HeadSHA:    b,
 			Name:       c,
+			VaultToken: d,
 		}
 		_, err := renderNomadJob(jobArgs)
 		if err != nil {
