@@ -10,6 +10,7 @@ Axiomatic uses environment variables to override the default configuration value
 * AXIOMATIC_PORT is the port number to bind. Default: 8181
 * GITHUB_SECRET is the secret token for validating webhook requests. Please set it to something unique. Default: you-deserve-what-you-get
 * NOMAD_SERVER is the URL of the Nomad server that will handle job submissions. Default: http://localhost:4646
+* VAULT_TOKEN is the token value that will be added to submitted batch jobs. Default: ""
 
 ## Running
 

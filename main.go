@@ -29,11 +29,15 @@ var GithubWebhookSecret = getenv("GITHUB_SECRET", "you-deserve-what-you-get")
 // NomadServerURL is the URL of the Nomad server that will handle job submissions
 var NomadServerURL = getenv("NOMAD_SERVER", "http://localhost:4646")
 
+// VaultToken is the token value that will be added to submitted batch jobs
+var VaultToken = getenv("VAULT_TOKEN", "")
+
 // NomadJobData contains data for job template rendering
 type NomadJobData struct {
 	GitRepoURL string
 	HeadSHA    string
 	Name       string
+	VaultToken string
 }
 
 func main() {
@@ -89,6 +93,7 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 			GitRepoURL: e.Repo.GetCloneURL(),
 			HeadSHA:    e.GetAfter(),
 			Name:       strings.Join([]string{"axiomatic", e.Repo.GetFullName()}, "-"),
+			VaultToken: VaultToken,
 		}
 		if debug {
 			log.Printf("jobArgs: %+v\n", jobArgs)
@@ -203,7 +208,7 @@ func templateNomadJob() string {
 		}
 		],
 		"Type": "batch",
-		"VaultToken": ""
+		"VaultToken": "{{ .VaultToken }}"
 	}
 }
 `
