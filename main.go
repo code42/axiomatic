@@ -136,7 +136,7 @@ func renderNomadJob(jobArgs NomadJobData) (*bytes.Buffer, error) {
 
 // submitNomadJob sends a job to a Nomad server REST API
 func submitNomadJob(jobName string, jobBody *bytes.Buffer) error {
-	url := strings.Join([]string{NomadServerURL, "v1/job", jobName}, "/")
+	url := strings.Join([]string{NomadServerURL, "v1/job", url.PathEscape(jobName)}, "/")
 	if debug {
 		log.Println("URL:", url)
 	}
