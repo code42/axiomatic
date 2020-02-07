@@ -29,7 +29,7 @@ var GithubWebhookSecret = getenv("GITHUB_SECRET", "you-deserve-what-you-get")
 // NomadServerURL is the URL of the Nomad server that will handle job submissions
 var NomadServerURL = getenv("NOMAD_SERVER", "http://localhost:4646")
 
-// VaultToken is the token value that will be added to submitted batch jobs
+// VaultToken is the token used to access the Nomad server
 var VaultToken = getenv("VAULT_TOKEN", "")
 
 // NomadJobData contains data for job template rendering
