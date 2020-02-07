@@ -33,3 +33,10 @@ Service health can be confirmed by making a web request to the '/health' path of
 ## Add a GitHub Repo Webhook
 
 TBD
+
+## Vault Policy
+
+Axiomatic needs a Vault policy that allows the service to submit batch jobs.
+
+*example policy TBD*
+
