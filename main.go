@@ -42,7 +42,6 @@ type NomadJobData struct {
 }
 
 func main() {
-	// xxx: add command line flags support
 	log.Println("Axiomatic Server Starting")
 	log.Println("AXIOMATIC_IP:", AxiomaticIP)
 	log.Println("AXIOMATIC_PORT:", AxiomaticPort)
