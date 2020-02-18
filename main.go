@@ -63,9 +63,8 @@ func getenv(key string, _default string) string {
 }
 
 func handleHealth(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
 	log.Println("Good to Serve")
-	fmt.Fprintln(w, "Good to Serve")
+	fmt.Fprintf(w, "Good to Serve")
 	return
 }
 

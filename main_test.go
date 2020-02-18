@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 	"testing/quick"
@@ -40,6 +42,23 @@ func TestGetenvReturnsDefault(t *testing.T) {
 	err := quick.Check(f, nil)
 	if err != nil {
 		t.Error(err)
+	}
+}
+
+func TestHandleHealth(t *testing.T) {
+	req, err := http.NewRequest("GET", "/health", nil)
+	if err != nil {
+		t.Error(err)
+	}
+	rec := httptest.NewRecorder()
+	handler := http.HandlerFunc(handleHealth)
+	handler.ServeHTTP(rec, req)
+	resp := rec.Result()
+	if status := resp.StatusCode; status != http.StatusOK {
+		t.Errorf("handleHealth returned %v instead of %v", status, http.StatusOK)
+	}
+	if rec.Body.String() != "Good to Serve" {
+		t.Errorf("handleHealth returned %v instead of %v", rec.Body.String(), "Good to Serve")
 	}
 }
 
