@@ -53,8 +53,7 @@ func TestHandleHealth(t *testing.T) {
 	rec := httptest.NewRecorder()
 	handler := http.HandlerFunc(handleHealth)
 	handler.ServeHTTP(rec, req)
-	resp := rec.Result()
-	if status := resp.StatusCode; status != http.StatusOK {
+	if status := rec.Code; status != http.StatusOK {
 		t.Errorf("handleHealth returned %v instead of %v", status, http.StatusOK)
 	}
 	if rec.Body.String() != "Good to Serve" {
