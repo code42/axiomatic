@@ -99,7 +99,7 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 		jobArgs := NomadJobData{
 			ConsulKeyPrefix: ConsulKeyPrefix,
 			ConsulServerURL: ConsulServerURL,
-			GitRepoName:     e.Repo.GetFullName()},
+			GitRepoName:     e.Repo.GetFullName(),
 			GitRepoURL:      e.Repo.GetCloneURL(),
 			HeadSHA:         e.GetAfter(),
 			VaultToken:      VaultToken,
