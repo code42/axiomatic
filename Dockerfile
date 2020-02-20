@@ -40,6 +40,9 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 ############################
 FROM scratch
 
+LABEL "repository"="https://github.com/jimrazmus/axiomatic"
+LABEL "maintainer"="Jim Razmus II <jim.razmus@gmail.com>"
+
 # Import from builder.
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
