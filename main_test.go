@@ -62,12 +62,14 @@ func TestHandleHealth(t *testing.T) {
 }
 
 func TestRenderNomadJobSucceeds(t *testing.T) {
-	f := func(a string, b string, c string, d string) bool {
+	f := func(a string, b string, c string, d string, e string, f string) bool {
 		jobArgs := NomadJobData{
-			GitRepoURL: a,
-			HeadSHA:    b,
-			Name:       c,
-			VaultToken: d,
+			ConsulKeyPrefix: a,
+			ConsulServerURL: b,
+			GitRepoName:     c,
+			GitRepoURL:      d,
+			HeadSHA:         e,
+			VaultToken:      f,
 		}
 		_, err := renderNomadJob(jobArgs)
 		if err != nil {

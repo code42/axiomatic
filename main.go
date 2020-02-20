@@ -24,6 +24,12 @@ var AxiomaticIP = getenv("AXIOMATIC_IP", "127.0.0.1")
 // AxiomaticPort is the port number to bind
 var AxiomaticPort = getenv("AXIOMATIC_PORT", "8181")
 
+// ConsulKeyPrefix is the path prefix to prepend to all consul keys
+var ConsulKeyPrefix = getenv("D2C_CONSUL_KEY_PREFIX", "")
+
+// ConsulServerURL is the URL of the Consul server kv store
+var ConsulServerURL = getenv("D2C_CONSUL_SERVER", "http://localhost:8500/v1/kv")
+
 // GithubWebhookSecret is the secret token for validating webhook requests
 var GithubWebhookSecret = getenv("GITHUB_SECRET", "you-deserve-what-you-get")
 
@@ -35,10 +41,12 @@ var VaultToken = getenv("VAULT_TOKEN", "")
 
 // NomadJobData contains data for job template rendering
 type NomadJobData struct {
-	GitRepoURL string
-	HeadSHA    string
-	Name       string
-	VaultToken string
+	ConsulKeyPrefix string
+	ConsulServerURL string
+	GitRepoName     string
+	GitRepoURL      string
+	HeadSHA         string
+	VaultToken      string
 }
 
 func main() {
@@ -89,10 +97,12 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 		log.Println("GitHub Pinged the Webhook")
 	case *github.PushEvent:
 		jobArgs := NomadJobData{
-			GitRepoURL: e.Repo.GetCloneURL(),
-			HeadSHA:    e.GetAfter(),
-			Name:       strings.Join([]string{"axiomatic", e.Repo.GetFullName()}, "-"),
-			VaultToken: VaultToken,
+			ConsulKeyPrefix: ConsulKeyPrefix,
+			ConsulServerURL: ConsulServerURL,
+			GitRepoName:     e.Repo.GetFullName()},
+			GitRepoURL:      e.Repo.GetCloneURL(),
+			HeadSHA:         e.GetAfter(),
+			VaultToken:      VaultToken,
 		}
 		if debug {
 			log.Printf("jobArgs: %+v\n", jobArgs)
@@ -108,13 +118,13 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 			log.Println("jobText:", jobText)
 		}
 
-		err = submitNomadJob(jobArgs.Name, jobText)
+		err = submitNomadJob(jobArgs.GitRepoName, jobText)
 		if err != nil {
 			log.Println("submitJob Error:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Printf("submitJob Success: %s (%s)", jobArgs.Name, jobArgs.HeadSHA)
+		log.Printf("submitJob Success: %s (%s)", jobArgs.GitRepoName, jobArgs.HeadSHA)
 		fmt.Fprintln(w, "Nomad Job Submitted")
 	default:
 		log.Printf("WARN: unknown event type %s\n", github.WebHookType(r))
@@ -172,8 +182,8 @@ func templateNomadJob() string {
 		"Datacenters": [
 		"dc1"
 		],
-		"ID": "{{ .Name }}",
-		"Name": "{{ .Name }}",
+		"ID": "dir2consul-{{ .GitRepoName }}",
+		"Name": "dir2consul-{{ .GitRepoName }}",
 		"Region": "global",
 		"TaskGroups": [
 		{
@@ -189,15 +199,13 @@ func templateNomadJob() string {
 				}
 				],
 				"Config": {
-					"image": "jimrazmus/awscli",
-					"args": [
-						"aws",
-						"--version"
-					]
+					"image": "jimrazmus/dir2consul"
 				},
 				"Driver": "docker",
 				"Env": {
-					"D2C_CONSUL_KEY_PREFIX": "{{ .Name }}"
+					"D2C_CONSUL_KEY_PREFIX": "{{ .ConsulKeyPrefix }}"
+					"D2C_CONSUL_SERVER": "{{ .ConsulServerURL }}"
+					"D2C_REPO_NAME": "{{ .GitRepoName }}"
 				},
 				"Meta": {
 					"commit-SHA": "{{ .HeadSHA }}"

@@ -10,39 +10,39 @@ Axiomatic is a GitHub webhook handler that launches dir2consul as a Nomad batch 
 
 ## Configuration
 
-Axiomatic uses environment variables to override the default configuration values. The variables are:
+Axiomatic uses environment variables to override the default configuration values. The Nomad job definition should be adjusted to set these variables. The variables are:
 
 * AXIOMATIC_IP is the IP address to bind. Default: 127.0.0.1
 * AXIOMATIC_PORT is the port number to bind. Default: 8181
 * GITHUB_SECRET is the secret token for validating webhook requests. Please set it to something unique. Default: you-deserve-what-you-get
-* NOMAD_SERVER is the URL of the Nomad server that will handle job submissions. Default: http://localhost:4646
+* NOMAD_SERVER is the URL of the Nomad server that will handle dir2consul job submissions. Default: http://localhost:4646
 * VAULT_TOKEN is the token value used to access the Nomad server. Default: ""
 
-## Running with Docker
+The following configuration variables are passed to dir2consul:
 
-```bash
-#> docker pull jimrazmus/axiomatic:vN.N.N
-#> docker run -p 80:8181 --env-file=.env jimrazmus/axiomatic:vN.N.N
-```
+* D2C_CONSUL_KEY_PREFIX is the path prefix to prepend to all consul keys. Default: ""
+* D2C_CONSUL_SERVER is the URL of the Consul server. Default: http://localhost:8500
 
-## Running with Nomad
+## Installation
+
+### Run the service on Nomad
 
 ```bash
 #> nomad job plan axiomatic.nomad
 #> nomad job run -check-index 0 axiomatic.nomad
 ```
 
-## Health Check
-
-Service health can be confirmed by making a web request to the '/health' path of the service.
-
-## Add a GitHub Repo Webhook
+### Add a GitHub Repo Webhook
 
 1. Open the Settings tab for your repo and choose Webhooks in the menu
 1. Press the "Add webhook" button
 1. Enter your Axiomatic service URL in the Payload URL field. E.g. "https://axiomatic.example.com/webhook"
 1. Enter your Axiomatic github secret in the Secret field
 1. Press the "Add webhook" button
+
+## Health Check
+
+Service health can be confirmed by making a web request to the '/health' path of the service.
 
 ## Vault Policy
 
