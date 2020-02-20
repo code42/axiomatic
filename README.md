@@ -38,7 +38,11 @@ Service health can be confirmed by making a web request to the '/health' path of
 
 ## Add a GitHub Repo Webhook
 
-TBD
+1. Open the Settings tab for your repo and choose Webhooks in the menu
+1. Press the "Add webhook" button
+1. Enter your Axiomatic service URL in the Payload URL field. E.g. "https://axiomatic.example.com/webhook"
+1. Enter your Axiomatic github secret in the Secret field
+1. Press the "Add webhook" button
 
 ## Vault Policy
 
