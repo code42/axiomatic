@@ -14,7 +14,7 @@ Axiomatic uses environment variables to override the default configuration value
 
 * AXIOMATIC_IP is the IP address to bind. Default: 127.0.0.1
 * AXIOMATIC_PORT is the port number to bind. Default: 8181
-* GITHUB_SECRET is the secret token for validating webhook requests. Please set it to something unique. Default: you-deserve-what-you-get
+* GITHUB_SECRET is the secret token for validating webhook requests. You *MUST* configure this value or the server will not start. There is no default value.
 * NOMAD_SERVER is the URL of the Nomad server that will handle dir2consul job submissions. Default: http://localhost:4646
 * VAULT_TOKEN is the token value used to access the Nomad server. Default: ""
 

@@ -31,7 +31,7 @@ var ConsulKeyPrefix = getenv("D2C_CONSUL_KEY_PREFIX", "")
 var ConsulServerURL = getenv("D2C_CONSUL_SERVER", "http://localhost:8500/v1/kv")
 
 // GithubWebhookSecret is the secret token for validating webhook requests
-var GithubWebhookSecret = getenv("GITHUB_SECRET", "you-deserve-what-you-get")
+var GithubWebhookSecret = getenv("GITHUB_SECRET", "")
 
 // NomadServerURL is the URL of the Nomad server that will handle job submissions
 var NomadServerURL = getenv("NOMAD_SERVER", "http://localhost:4646")
@@ -51,6 +51,9 @@ type NomadJobData struct {
 
 func main() {
 	log.Println("Axiomatic Server Starting")
+	if GithubWebhookSecret == "" {
+		log.Fatal("You must configure GITHUB_SECRET! Axiomatic shutting down.")
+	}
 	log.Println("AXIOMATIC_IP:", AxiomaticIP)
 	log.Println("AXIOMATIC_PORT:", AxiomaticPort)
 	log.Println("NOMAD_SERVER:", NomadServerURL)
