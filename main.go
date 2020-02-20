@@ -196,7 +196,9 @@ func templateNomadJob() string {
 					]
 				},
 				"Driver": "docker",
-				"Env": null,
+				"Env": {
+					"D2C_CONSUL_KEY_PREFIX": "{{ .Name }}"
+				},
 				"Meta": {
 					"commit-SHA": "{{ .HeadSHA }}"
 				},
