@@ -1,20 +1,20 @@
 package main
 
 import (
-    "bytes"
-    "errors"
-    "fmt"
-    "io/ioutil"
-    "log"
-    "net/http"
-    "net/url"
-    "crypto/tls"
-    "crypto/x509"
-    "os"
-    "strings"
-    "text/template"
+	"bytes"
+	"crypto/tls"
+	"crypto/x509"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"net/url"
+	"os"
+	"strings"
+	"text/template"
 
-    "github.com/google/go-github/github"
+	"github.com/google/go-github/github"
 )
 
 // conditionally compile in or out the debug prints
@@ -42,208 +42,208 @@ var NomadServerURL = getenv("NOMAD_SERVER", "http://localhost:4646")
 var VaultToken = getenv("VAULT_TOKEN", "")
 
 // Nomad mTLS certs and root cert for talking to the Nomad Cluster
-var NomadCACert     = getenv("NOMAD_CACERT", "")
+var NomadCACert = getenv("NOMAD_CACERT", "")
 var NomadClientCert = getenv("NOMAD_CLIENT_CERT", "")
-var NomadClientKey  = getenv("NOMAD_CLIENT_KEY", "")
+var NomadClientKey = getenv("NOMAD_CLIENT_KEY", "")
 
 // NomadJobData contains data for job template rendering
 type NomadJobData struct {
-    ConsulKeyPrefix string
-    ConsulServerURL string
-    GitRepoName     string
-    GitRepoURL      string
-    HeadSHA         string
-    VaultToken      string
+	ConsulKeyPrefix string
+	ConsulServerURL string
+	GitRepoName     string
+	GitRepoURL      string
+	HeadSHA         string
+	VaultToken      string
 }
 
 func main() {
-    log.Println("Axiomatic Server Starting")
-    if GithubWebhookSecret == "" {
-        log.Fatal("You must configure GITHUB_SECRET! Axiomatic shutting down.")
-    }
-    log.Println("AXIOMATIC_IP:", AxiomaticIP)
-    log.Println("AXIOMATIC_PORT:", AxiomaticPort)
-    log.Println("NOMAD_SERVER:", NomadServerURL)
-    log.Println("NOMAD_CACERT:", NomadCACert)
-    log.Println("NOMAD_CLIENT_CERT:", NomadClientCert)
-    http.HandleFunc("/health", handleHealth)
-    http.HandleFunc("/webhook", handleWebhook)
-    serverAddr := strings.Join([]string{AxiomaticIP, AxiomaticPort}, ":")
-    log.Fatal(http.ListenAndServe(serverAddr, nil))
-    return
+	log.Println("Axiomatic Server Starting")
+	if GithubWebhookSecret == "" {
+		log.Fatal("You must configure GITHUB_SECRET! Axiomatic shutting down.")
+	}
+	log.Println("AXIOMATIC_IP:", AxiomaticIP)
+	log.Println("AXIOMATIC_PORT:", AxiomaticPort)
+	log.Println("NOMAD_SERVER:", NomadServerURL)
+	log.Println("NOMAD_CACERT:", NomadCACert)
+	log.Println("NOMAD_CLIENT_CERT:", NomadClientCert)
+	http.HandleFunc("/health", handleHealth)
+	http.HandleFunc("/webhook", handleWebhook)
+	serverAddr := strings.Join([]string{AxiomaticIP, AxiomaticPort}, ":")
+	log.Fatal(http.ListenAndServe(serverAddr, nil))
+	return
 }
 
 // getenv returns the environment value for the given key or the default value when not found
 func getenv(key string, _default string) string {
-    val, ok := os.LookupEnv(key)
-    if !ok {
-        return _default
-    }
-    return val
+	val, ok := os.LookupEnv(key)
+	if !ok {
+		return _default
+	}
+	return val
 }
 
 func handleHealth(w http.ResponseWriter, r *http.Request) {
-    log.Println("Good to Serve")
-    fmt.Fprintf(w, "Good to Serve")
-    return
+	log.Println("Good to Serve")
+	fmt.Fprintf(w, "Good to Serve")
+	return
 }
 
 func handleWebhook(w http.ResponseWriter, r *http.Request) {
-    defer r.Body.Close()
-    payload, err := github.ValidatePayload(r, []byte(GithubWebhookSecret))
-    if err != nil {
-        log.Printf("error validating request body: err=%s\n", err)
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
+	defer r.Body.Close()
+	payload, err := github.ValidatePayload(r, []byte(GithubWebhookSecret))
+	if err != nil {
+		log.Printf("error validating request body: err=%s\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-    event, err := github.ParseWebHook(github.WebHookType(r), payload)
-    if err != nil {
-        log.Printf("could not parse webhook: err=%s\n", err)
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
+	event, err := github.ParseWebHook(github.WebHookType(r), payload)
+	if err != nil {
+		log.Printf("could not parse webhook: err=%s\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-    switch e := event.(type) {
-    case *github.PingEvent:
-        log.Println("GitHub Pinged the Webhook")
-    case *github.PushEvent:
-        jobArgs := NomadJobData{
-            ConsulKeyPrefix: ConsulKeyPrefix,
-            ConsulServerURL: ConsulServerURL,
-            GitRepoName:     e.Repo.GetFullName(),
-            GitRepoURL:      e.Repo.GetCloneURL(),
-            HeadSHA:         e.GetAfter(),
-            VaultToken:      VaultToken,
-        }
-        if debug {
-            log.Printf("jobArgs: %+v\n", jobArgs)
-        }
+	switch e := event.(type) {
+	case *github.PingEvent:
+		log.Println("GitHub Pinged the Webhook")
+	case *github.PushEvent:
+		jobArgs := NomadJobData{
+			ConsulKeyPrefix: ConsulKeyPrefix,
+			ConsulServerURL: ConsulServerURL,
+			GitRepoName:     e.Repo.GetFullName(),
+			GitRepoURL:      e.Repo.GetCloneURL(),
+			HeadSHA:         e.GetAfter(),
+			VaultToken:      VaultToken,
+		}
+		if debug {
+			log.Printf("jobArgs: %+v\n", jobArgs)
+		}
 
-        jobText, err := renderNomadJob(jobArgs)
-        if err != nil {
-            log.Println("renderNomamdJob Error:", err)
-            http.Error(w, err.Error(), http.StatusInternalServerError)
-            return
-        }
-        if debug {
-            log.Println("jobText:", jobText)
-        }
+		jobText, err := renderNomadJob(jobArgs)
+		if err != nil {
+			log.Println("renderNomamdJob Error:", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if debug {
+			log.Println("jobText:", jobText)
+		}
 
-        err = submitNomadJob(jobArgs.GitRepoName, jobText)
-        if err != nil {
-            log.Println("submitJob Error:", err)
-            http.Error(w, err.Error(), http.StatusInternalServerError)
-            return
-        }
-        log.Printf("submitJob Success: %s (%s)", jobArgs.GitRepoName, jobArgs.HeadSHA)
-        fmt.Fprintln(w, "Nomad Job Submitted")
-    default:
-        log.Printf("WARN: unknown event type %s\n", github.WebHookType(r))
-        return
-    }
+		err = submitNomadJob(jobArgs.GitRepoName, jobText)
+		if err != nil {
+			log.Println("submitJob Error:", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		log.Printf("submitJob Success: %s (%s)", jobArgs.GitRepoName, jobArgs.HeadSHA)
+		fmt.Fprintln(w, "Nomad Job Submitted")
+	default:
+		log.Printf("WARN: unknown event type %s\n", github.WebHookType(r))
+		return
+	}
 }
 
 // renderNomadJob combines a template with supplied args and returns a Nomad job definition as a string
 func renderNomadJob(jobArgs NomadJobData) (*bytes.Buffer, error) {
-    t := template.Must(template.New("job").Parse(templateNomadJob()))
-    buf := &bytes.Buffer{}
-    err := t.Execute(buf, jobArgs)
-    if err != nil {
-        return buf, err
-    }
-    return buf, nil
+	t := template.Must(template.New("job").Parse(templateNomadJob()))
+	buf := &bytes.Buffer{}
+	err := t.Execute(buf, jobArgs)
+	if err != nil {
+		return buf, err
+	}
+	return buf, nil
 }
 
 // submitNomadJob sends a job to a Nomad server REST API
 func submitNomadJob(jobName string, jobBody *bytes.Buffer) error {
-    url := strings.Join([]string{NomadServerURL, "v1/job", url.PathEscape(jobName)}, "/")
-    if debug {
-        log.Println("URL:", url)
-    }
+	url := strings.Join([]string{NomadServerURL, "v1/job", url.PathEscape(jobName)}, "/")
+	if debug {
+		log.Println("URL:", url)
+	}
 
-    request, err := http.NewRequest("POST", url, jobBody)
-    if err != nil {
-        return err
-    }
-    request.Header.Set("Content-Type", "application/json")
+	request, err := http.NewRequest("POST", url, jobBody)
+	if err != nil {
+		return err
+	}
+	request.Header.Set("Content-Type", "application/json")
 
-    var client *http.Client
-    // Check for mTLS certs being provided
-    if NomadCACert != "" && NomadClientCert != "" && NomadClientKey != "" {
-        if debug {
-            log.Println("Found Nomad mTLS certs!  Initializing mTLS")
-        }
-        // Read certs in...
-        nomadRootCert, err := ioutil.ReadFile(NomadCACert)
-        if err != nil {
-            return err
-        }
+	var client *http.Client
+	// Check for mTLS certs being provided
+	if NomadCACert != "" && NomadClientCert != "" && NomadClientKey != "" {
+		if debug {
+			log.Println("Found Nomad mTLS certs!  Initializing mTLS")
+		}
+		// Read certs in...
+		nomadRootCert, err := ioutil.ReadFile(NomadCACert)
+		if err != nil {
+			return err
+		}
 
-        nomadClientCert, err := ioutil.ReadFile(NomadClientCert)
-        if err != nil {
-            return err
-        }
+		nomadClientCert, err := ioutil.ReadFile(NomadClientCert)
+		if err != nil {
+			return err
+		}
 
-        nomadClientKey, err := ioutil.ReadFile(NomadClientKey)
-        if err != nil {
-            return err
-        }
+		nomadClientKey, err := ioutil.ReadFile(NomadClientKey)
+		if err != nil {
+			return err
+		}
 
-        // Create x509 certificate object
-        client_cert_x509, err := tls.X509KeyPair(nomadClientCert, nomadClientKey)
-        if err != nil {
-            return err
-        }
+		// Create x509 certificate object
+		client_cert_x509, err := tls.X509KeyPair(nomadClientCert, nomadClientKey)
+		if err != nil {
+			return err
+		}
 
-        // Create x509 certificate pool
-        pool := x509.NewCertPool()
-        ok := pool.AppendCertsFromPEM(nomadRootCert)
-        if !ok {
-            error := errors.New("Error appending Nomad Root Cert to x509 Certificate Pool!")
-            return error
-        }
+		// Create x509 certificate pool
+		pool := x509.NewCertPool()
+		ok := pool.AppendCertsFromPEM(nomadRootCert)
+		if !ok {
+			error := errors.New("Error appending Nomad Root Cert to x509 Certificate Pool!")
+			return error
+		}
 
-        // Create the http TLS configuration object
-        tlsConfig := &tls.Config{
-            Certificates:       []tls.Certificate{client_cert_x509},
-            RootCAs:            pool,
-            InsecureSkipVerify: false,
-        }
+		// Create the http TLS configuration object
+		tlsConfig := &tls.Config{
+			Certificates:       []tls.Certificate{client_cert_x509},
+			RootCAs:            pool,
+			InsecureSkipVerify: false,
+		}
 
-        // Create a net/http client using this TLS configuration
-        client = &http.Client{
-            Transport: &http.Transport{
-                TLSClientConfig: tlsConfig,
-            },
-        }
-        
-    } else {
-        if debug {
-            log.Println("No Nomad mTLS certs found!  Skipping mTLS!")
-        }
-        client = &http.Client{}
-    }
-    response, err := client.Do(request)
-    if err != nil {
-        return err
-    }
-    defer response.Body.Close()
+		// Create a net/http client using this TLS configuration
+		client = &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: tlsConfig,
+			},
+		}
 
-    if debug {
-        body, _ := ioutil.ReadAll(response.Body)
-        log.Println("response Body:", string(body))
-    }
+	} else {
+		if debug {
+			log.Println("No Nomad mTLS certs found!  Skipping mTLS!")
+		}
+		client = &http.Client{}
+	}
+	response, err := client.Do(request)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
 
-    if response.StatusCode < 200 || response.StatusCode > 299 {
-        return errors.New(response.Status)
-    }
-    return nil
+	if debug {
+		body, _ := ioutil.ReadAll(response.Body)
+		log.Println("response Body:", string(body))
+	}
+
+	if response.StatusCode < 200 || response.StatusCode > 299 {
+		return errors.New(response.Status)
+	}
+	return nil
 }
 
 // templateNomadJob returns a templated,json formatted, Nomad job definition as a string
 func templateNomadJob() string {
-    const jobTemplate = `
+	const jobTemplate = `
 {
     "Job": {
         "Datacenters": [
@@ -288,5 +288,5 @@ func templateNomadJob() string {
     }
 }
 `
-    return jobTemplate
+	return jobTemplate
 }
