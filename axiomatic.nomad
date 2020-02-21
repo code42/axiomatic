@@ -54,11 +54,22 @@ job "axiomatic" {
           port "http" {}
         }
       }
-      # vault {
-      #   policies      = ["axiomatic"]
-      #   change_mode   = "signal"
-      #   change_signal = "SIGHUP"
-      # }
+      vault {
+        policies      = ["admin"]
+        change_mode   = "restart"
+        change_signal = "SIGHUP"
+      }
+      template {
+        data = <<EOH
+        {{ with secret "pki_int/issue/nomad-cluster" "ttl=24h" }}
+        NOMAD_CACERT="{{ .Data.issuing_ca | toJSON }}"
+        NOMAD_CLIENT_CERT="{{ .Data.certificate | toJSON }}"
+        NOMAD_CLIENT_KEY="{{ .Data.private_key | toJSON }}"
+        {{ end }}
+        EOH
+        destination = "foo.txt"
+        env = true
+      }
     }
   }
 }
