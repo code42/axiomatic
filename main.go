@@ -117,24 +117,20 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 			log.Printf("jobArgs: %+v\n", jobArgs)
 		}
 
-		jobText, err := renderNomadJob(jobArgs)
+		job, err := templateToJob(jobArgs)
 		if err != nil {
-			log.Println("renderNomamdJob Error:", err)
+			log.Println("template to job failed:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
-		}
-		if debug {
-			log.Println("jobText:", jobText)
 		}
 
-		err = submitNomadJob(jobArgs.GitRepoName, jobText)
+		err = submitNomadJob(job)
 		if err != nil {
-			log.Println("submitJob Error:", err)
+			log.Println("submit job failed:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Printf("submitJob Success: %s (%s)", jobArgs.GitRepoName, jobArgs.HeadSHA)
-		fmt.Fprintln(w, "Nomad Job Submitted")
+
 	default:
 		log.Printf("WARN: unknown event type %s\n", github.WebHookType(r))
 		return
