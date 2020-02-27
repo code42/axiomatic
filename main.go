@@ -39,6 +39,8 @@ var NomadServerURL = getenv("NOMAD_SERVER", "http://localhost:4646")
 // VaultToken is the token used to access the Nomad server
 var VaultToken = getenv("VAULT_TOKEN", "")
 
+var jobTemplate *template.Template
+
 // NomadJobData contains data for job template rendering
 type NomadJobData struct {
 	ConsulKeyPrefix string
@@ -56,7 +58,9 @@ func main() {
 	}
 	log.Println("AXIOMATIC_IP:", AxiomaticIP)
 	log.Println("AXIOMATIC_PORT:", AxiomaticPort)
-	log.Println("NOMAD_SERVER:", NomadServerURL)
+
+	jobTemplate = template.Must(template.New("job").Parse(templateNomadJob()))
+
 	http.HandleFunc("/health", handleHealth)
 	http.HandleFunc("/webhook", handleWebhook)
 	serverAddr := strings.Join([]string{AxiomaticIP, AxiomaticPort}, ":")
