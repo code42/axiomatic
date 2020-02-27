@@ -1,6 +1,7 @@
 package main
 
 import (
+	"html/template"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -61,7 +62,8 @@ func TestHandleHealth(t *testing.T) {
 	}
 }
 
-func TestRenderNomadJobSucceeds(t *testing.T) {
+func TestTemplateToJob(t *testing.T) {
+	jobTemplate = template.Must(template.New("job").Parse(templateNomadJob()))
 	f := func(a string, b string, c string, d string, e string, f string) bool {
 		jobArgs := NomadJobData{
 			ConsulKeyPrefix: a,
@@ -71,7 +73,7 @@ func TestRenderNomadJobSucceeds(t *testing.T) {
 			HeadSHA:         e,
 			VaultToken:      f,
 		}
-		_, err := renderNomadJob(jobArgs)
+		_, err := templateToJob(jobArgs)
 		if err != nil {
 			t.Error(err)
 		}
