@@ -160,21 +160,21 @@ func templateToJob(jobArgs NomadJobData) (*api.Job, error) {
 	return job, nil
 }
 
-	client := &http.Client{}
-	response, err := client.Do(request)
+// submitNomadJob sends a job to a Nomad server
+func submitNomadJob(job *api.Job) error {
+	nomadClient, err := api.NewClient(api.DefaultConfig())
 	if err != nil {
+		log.Println("Error establishing Nomad Client:", err)
 		return err
 	}
-	defer response.Body.Close()
 
-	if debug {
-		body, _ := ioutil.ReadAll(response.Body)
-		log.Println("response Body:", string(body))
+	var jobResp *api.JobRegisterResponse
+	jobResp, _, err = nomadClient.Jobs().Register(job, nil)
+	if jobResp.Warnings != "" {
+		log.Printf("Eval Warning (%s) %s", jobResp.EvalID, jobResp.Warnings)
+		return errors.New(jobResp.Warnings)
 	}
 
-	if response.StatusCode < 200 || response.StatusCode > 299 {
-		return errors.New(response.Status)
-	}
 	return nil
 }
 
