@@ -35,9 +35,6 @@ var ConsulServerURL = getenv("D2C_CONSUL_SERVER", "http://localhost:8500/v1/kv")
 // GithubWebhookSecret is the secret token for validating webhook requests
 var GithubWebhookSecret = getenv("GITHUB_SECRET", "")
 
-// NomadServerURL is the URL of the Nomad server that will handle job submissions
-var NomadServerURL = getenv("NOMAD_SERVER", "http://localhost:4646")
-
 // VaultToken is the token used to access the Nomad server
 var VaultToken = getenv("VAULT_TOKEN", "")
 
@@ -65,6 +62,7 @@ func main() {
 
 	http.HandleFunc("/health", handleHealth)
 	http.HandleFunc("/webhook", handleWebhook)
+
 	serverAddr := strings.Join([]string{AxiomaticIP, AxiomaticPort}, ":")
 	log.Fatal(http.ListenAndServe(serverAddr, nil))
 	return
