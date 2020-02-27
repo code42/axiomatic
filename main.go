@@ -13,6 +13,8 @@ import (
 	"text/template"
 
 	"github.com/google/go-github/github"
+	"github.com/hashicorp/nomad/api"
+	"github.com/hashicorp/nomad/jobspec"
 )
 
 // conditionally compile in or out the debug prints
@@ -139,29 +141,24 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// renderNomadJob combines a template with supplied args and returns a Nomad job definition as a string
-func renderNomadJob(jobArgs NomadJobData) (*bytes.Buffer, error) {
-	t := template.Must(template.New("job").Parse(templateNomadJob()))
-	buf := &bytes.Buffer{}
-	err := t.Execute(buf, jobArgs)
+func templateToJob(jobArgs NomadJobData) (*api.Job, error) {
+	var buf bytes.Buffer
+
+	// execute template with given data and output to io pipe
+	err := jobTemplate.Execute(&buf, jobArgs)
 	if err != nil {
-		return buf, err
+		return nil, err
 	}
-	return buf, nil
+
+	// create a Nomad job struct by parsing data from the io pipe
+	var job *api.Job
+	job, err = jobspec.Parse(&buf)
+	if err != nil {
+		return nil, err
+	}
+
+	return job, nil
 }
-
-// submitNomadJob sends a job to a Nomad server REST API
-func submitNomadJob(jobName string, jobBody *bytes.Buffer) error {
-	url := strings.Join([]string{NomadServerURL, "v1/job", url.PathEscape(jobName)}, "/")
-	if debug {
-		log.Println("URL:", url)
-	}
-
-	request, err := http.NewRequest("POST", url, jobBody)
-	if err != nil {
-		return err
-	}
-	request.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	response, err := client.Do(request)
