@@ -180,48 +180,31 @@ func submitNomadJob(jobName string, jobBody *bytes.Buffer) error {
 // templateNomadJob returns a templated,json formatted, Nomad job definition as a string
 func templateNomadJob() string {
 	const jobTemplate = `
-{
-	"Job": {
-		"Datacenters": [
-		"dc1"
-		],
-		"ID": "dir2consul-{{ .GitRepoName }}",
-		"Name": "dir2consul-{{ .GitRepoName }}",
-		"Region": "global",
-		"TaskGroups": [
-		{
-			"Name": "dir2consul",
-			"Tasks": [
-			{
-				"Artifacts": [
-				{
-					"GetterMode": "any",
-					"GetterOptions": null,
-					"GetterSource": "{{ .GitRepoURL }}",
-					"RelativeDest": "local/"
-				}
-				],
-				"Config": {
-					"image": "jimrazmus/dir2consul"
-				},
-				"Driver": "docker",
-				"Env": {
-					"D2C_CONSUL_KEY_PREFIX": "{{ .ConsulKeyPrefix }}"
-					"D2C_CONSUL_SERVER": "{{ .ConsulServerURL }}"
-					"D2C_REPO_NAME": "{{ .GitRepoName }}"
-				},
-				"Meta": {
-					"commit-SHA": "{{ .HeadSHA }}"
-				},
-				"Name": "dir2consul",
-				"Vault": null
+job "dir2consul-{{ .GitRepoName }}" {
+	datacenters = ["dc1"]
+	region = "global"
+	group "dir2consul" {
+		task "dir2consul" {
+			artifact {
+				destination = "local/"
+				source = "{{ .GitRepoURL }}"
 			}
-			]
+			config {
+				image = "jimrazmus/dir2consul:v1.1.0"
+			}
+			driver = "docker"
+			env {
+				D2C_CONSUL_KEY_PREFIX = "{{ .ConsulKeyPrefix }}"
+				D2C_CONSUL_SERVER = "{{ .ConsulServerURL }}"
+			}
+			meta {
+				commit-SHA = "{{ .HeadSHA }}"
+			}
+			# vault {}
 		}
-		],
-		"Type": "batch",
-		"VaultToken": "{{ .VaultToken }}"
 	}
+	type = "batch"
+	# vault = {}
 }
 `
 	return jobTemplate
