@@ -1,6 +1,7 @@
 package main
 
 import (
+	"html/template"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -61,15 +62,18 @@ func TestHandleHealth(t *testing.T) {
 	}
 }
 
-func TestRenderNomadJobSucceeds(t *testing.T) {
-	f := func(a string, b string, c string, d string) bool {
+func TestTemplateToJob(t *testing.T) {
+	jobTemplate = template.Must(template.New("job").Parse(templateNomadJob()))
+	f := func(a string, b string, c string, d string, e string, f string) bool {
 		jobArgs := NomadJobData{
-			GitRepoURL: a,
-			HeadSHA:    b,
-			Name:       c,
-			VaultToken: d,
+			ConsulKeyPrefix: a,
+			ConsulServerURL: b,
+			GitRepoName:     c,
+			GitRepoURL:      d,
+			HeadSHA:         e,
+			VaultToken:      f,
 		}
-		_, err := renderNomadJob(jobArgs)
+		_, err := templateToJob(jobArgs)
 		if err != nil {
 			t.Error(err)
 		}

@@ -1,8 +1,7 @@
 ############################
 # STEP 1 build executable binary
 ############################
-# golang alpine 1.13.5
-FROM golang@sha256:0991060a1447cf648bab7f6bb60335d1243930e38420bee8fec3db1267b84cfa as builder
+FROM golang:1.14.0-alpine3.11 as builder
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
@@ -39,6 +38,9 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 # STEP 2 build a small image
 ############################
 FROM scratch
+
+LABEL "repository"="https://github.com/jimrazmus/axiomatic"
+LABEL "maintainer"="Jim Razmus II <jim.razmus@gmail.com>"
 
 # Import from builder.
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
