@@ -179,25 +179,26 @@ job "dir2consul-{{ .GitRepoName }}" {
 	group "dir2consul" {
 		task "dir2consul" {
 			artifact {
-				destination = "local/"
+				destination = "local/{{ .GitRepoName }}"
 				source = "{{ .GitRepoURL }}"
 			}
 			config {
-				image = "jimrazmus/dir2consul:v1.1.0"
+				image = "jimrazmus/dir2consul:v1.3.0"
 			}
 			driver = "docker"
 			env {
-				D2C_CONSUL_KEY_PREFIX = "{{ .ConsulKeyPrefix }}"
+				D2C_CONSUL_KEY_PREFIX = "services/{{ .GitRepoName }}/config"
 				D2C_CONSUL_SERVER = "{{ .ConsulServerURL }}"
 			}
 			meta {
 				commit-SHA = "{{ .HeadSHA }}"
 			}
-			# vault {}
+			vault = {
+				policies = ["consul-{{ .GitRepoName }}-write"]
+			}
 		}
 	}
 	type = "batch"
-	# vault = {}
 }
 `
 	return jobTemplate
