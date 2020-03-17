@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"html/template"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
-	"text/template"
 
 	"github.com/google/go-github/github"
+	"github.com/hashicorp/nomad/api"
+	"github.com/hashicorp/nomad/jobspec"
 )
 
 // conditionally compile in or out the debug prints
@@ -33,11 +33,10 @@ var ConsulServerURL = getenv("D2C_CONSUL_SERVER", "http://localhost:8500/v1/kv")
 // GithubWebhookSecret is the secret token for validating webhook requests
 var GithubWebhookSecret = getenv("GITHUB_SECRET", "")
 
-// NomadServerURL is the URL of the Nomad server that will handle job submissions
-var NomadServerURL = getenv("NOMAD_SERVER", "http://localhost:4646")
-
 // VaultToken is the token used to access the Nomad server
 var VaultToken = getenv("VAULT_TOKEN", "")
+
+var jobTemplate *template.Template
 
 // NomadJobData contains data for job template rendering
 type NomadJobData struct {
@@ -56,9 +55,12 @@ func main() {
 	}
 	log.Println("AXIOMATIC_IP:", AxiomaticIP)
 	log.Println("AXIOMATIC_PORT:", AxiomaticPort)
-	log.Println("NOMAD_SERVER:", NomadServerURL)
+
+	jobTemplate = template.Must(template.New("job").Parse(templateNomadJob()))
+
 	http.HandleFunc("/health", handleHealth)
 	http.HandleFunc("/webhook", handleWebhook)
+
 	serverAddr := strings.Join([]string{AxiomaticIP, AxiomaticPort}, ":")
 	log.Fatal(http.ListenAndServe(serverAddr, nil))
 	return
@@ -111,117 +113,92 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 			log.Printf("jobArgs: %+v\n", jobArgs)
 		}
 
-		jobText, err := renderNomadJob(jobArgs)
+		job, err := templateToJob(jobArgs)
 		if err != nil {
-			log.Println("renderNomamdJob Error:", err)
+			log.Println("template to job failed:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
-		}
-		if debug {
-			log.Println("jobText:", jobText)
 		}
 
-		err = submitNomadJob(jobArgs.GitRepoName, jobText)
+		err = submitNomadJob(job)
 		if err != nil {
-			log.Println("submitJob Error:", err)
+			log.Println("submit job failed:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Printf("submitJob Success: %s (%s)", jobArgs.GitRepoName, jobArgs.HeadSHA)
-		fmt.Fprintln(w, "Nomad Job Submitted")
+
 	default:
 		log.Printf("WARN: unknown event type %s\n", github.WebHookType(r))
 		return
 	}
 }
 
-// renderNomadJob combines a template with supplied args and returns a Nomad job definition as a string
-func renderNomadJob(jobArgs NomadJobData) (*bytes.Buffer, error) {
-	t := template.Must(template.New("job").Parse(templateNomadJob()))
-	buf := &bytes.Buffer{}
-	err := t.Execute(buf, jobArgs)
+func templateToJob(jobArgs NomadJobData) (*api.Job, error) {
+	var buf bytes.Buffer
+
+	// execute template with given data and output to io pipe
+	err := jobTemplate.Execute(&buf, jobArgs)
 	if err != nil {
-		return buf, err
+		return nil, err
 	}
-	return buf, nil
+
+	// create a Nomad job struct by parsing data from the io pipe
+	var job *api.Job
+	job, err = jobspec.Parse(&buf)
+	if err != nil {
+		return nil, err
+	}
+
+	return job, nil
 }
 
-// submitNomadJob sends a job to a Nomad server REST API
-func submitNomadJob(jobName string, jobBody *bytes.Buffer) error {
-	url := strings.Join([]string{NomadServerURL, "v1/job", url.PathEscape(jobName)}, "/")
-	if debug {
-		log.Println("URL:", url)
-	}
-
-	request, err := http.NewRequest("POST", url, jobBody)
+// submitNomadJob sends a job to a Nomad server
+func submitNomadJob(job *api.Job) error {
+	nomadClient, err := api.NewClient(api.DefaultConfig())
 	if err != nil {
+		log.Println("Error establishing Nomad Client:", err)
 		return err
 	}
-	request.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
-	response, err := client.Do(request)
-	if err != nil {
-		return err
-	}
-	defer response.Body.Close()
-
-	if debug {
-		body, _ := ioutil.ReadAll(response.Body)
-		log.Println("response Body:", string(body))
+	var jobResp *api.JobRegisterResponse
+	jobResp, _, err = nomadClient.Jobs().Register(job, nil)
+	if jobResp.Warnings != "" {
+		log.Printf("Eval Warning (%s) %s", jobResp.EvalID, jobResp.Warnings)
+		return errors.New(jobResp.Warnings)
 	}
 
-	if response.StatusCode < 200 || response.StatusCode > 299 {
-		return errors.New(response.Status)
-	}
 	return nil
 }
 
 // templateNomadJob returns a templated,json formatted, Nomad job definition as a string
 func templateNomadJob() string {
 	const jobTemplate = `
-{
-	"Job": {
-		"Datacenters": [
-		"dc1"
-		],
-		"ID": "dir2consul-{{ .GitRepoName }}",
-		"Name": "dir2consul-{{ .GitRepoName }}",
-		"Region": "global",
-		"TaskGroups": [
-		{
-			"Name": "dir2consul",
-			"Tasks": [
-			{
-				"Artifacts": [
-				{
-					"GetterMode": "any",
-					"GetterOptions": null,
-					"GetterSource": "{{ .GitRepoURL }}",
-					"RelativeDest": "local/"
-				}
-				],
-				"Config": {
-					"image": "jimrazmus/dir2consul"
-				},
-				"Driver": "docker",
-				"Env": {
-					"D2C_CONSUL_KEY_PREFIX": "{{ .ConsulKeyPrefix }}"
-					"D2C_CONSUL_SERVER": "{{ .ConsulServerURL }}"
-					"D2C_REPO_NAME": "{{ .GitRepoName }}"
-				},
-				"Meta": {
-					"commit-SHA": "{{ .HeadSHA }}"
-				},
-				"Name": "dir2consul",
-				"Vault": null
+job "dir2consul-{{ .GitRepoName }}" {
+	datacenters = ["dc1"]
+	region = "global"
+	group "dir2consul" {
+		task "dir2consul" {
+			artifact {
+				destination = "local/{{ .GitRepoName }}"
+				source = "{{ .GitRepoURL }}"
 			}
-			]
+			config {
+				image = "jimrazmus/dir2consul:v1.3.0"
+			}
+			driver = "docker"
+			env {
+				D2C_CONSUL_KEY_PREFIX = "services/{{ .GitRepoName }}/config"
+				D2C_CONSUL_SERVER = "{{ .ConsulServerURL }}"
+			}
+			meta {
+				commit-SHA = "{{ .HeadSHA }}"
+			}
+			vault = {
+				policies = ["consul-{{ .GitRepoName }}-write"]
+			}
 		}
-		],
-		"Type": "batch",
-		"VaultToken": "{{ .VaultToken }}"
 	}
+	type = "batch"
 }
 `
 	return jobTemplate
