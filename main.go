@@ -183,7 +183,7 @@ job "dir2consul-{{ .GitRepoName }}" {
                 source = "{{ .GitRepoURL }}"
             }
             config {
-                image = "jimrazmus/dir2consul:v1.3.0"
+                image = "jimrazmus/dir2consul:v1.4.1"
             }
             driver = "docker"
             env {
