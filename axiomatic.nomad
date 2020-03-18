@@ -1,64 +1,78 @@
-# Nomad job definition to run the Axiomatic service
 job "axiomatic" {
-  datacenters = ["dc1"]
   meta {
     repo = "http://github.com/jimrazmus/axiomatic"
+    service = "axiomatic"
   }
-  region = "global"
-  type = "service"
-  update {
-    auto_revert = true
-    canary = 1
-    healthy_deadline = "3m"
-    min_healthy_time = "10s"
-    progress_deadline = "10m"
-  }
-
+  datacenters = ["dc1"]
   group "axiomatic" {
-    service {
-      check {
-        interval = "30s"
-        path    = "/health"
-        timeout  = "2s"
-        type     = "http"
+    task "axiomatic" {
+      driver = "docker"
+
+      config {
+        image = "jimrazmus/axiomatic:rc"
+        port_map {
+          http = 8181
+        }
       }
-      connect {
-        sidecar_service {
-          proxy {
-            upstreams {
-              destination_name = "nomad"
-              local_bind_port = "4646"
-            }
+
+      env {
+        AXIOMATIC_IP = "0.0.0.0"
+        AXIOMATIC_PORT = "8181"
+        GITHUB_SECRET = "you-deserve-what-you-get"
+        NOMAD_CACERT = "/certs/nomad-ca.pem"
+        NOMAD_CLIENT_CERT = "/certs/cli.pem"
+        NOMAD_CLIENT_KEY = "/certs/cli-key.pem"
+      }
+      template {
+        data = <<EOH
+      {{ with secret "pki_int/issue/nomad-cluster" "ttl=24h" }}
+      {{ .Data.issuing_ca }}
+      {{ end }}
+      EOH
+        destination = "/certs/nomad-ca.pem"
+      }
+      template {
+        data = <<EOH
+      {{ with secret "pki_int/issue/nomad-cluster" "ttl=24h" }}
+      {{ .Data.certificate }}
+      {{ end }}
+      EOH
+        destination = "/certs/cli.pem"
+      }
+      template {
+        data = <<EOH
+      {{ with secret "pki_int/issue/nomad-cluster" "ttl=24h" }}
+      {{ .Data.private_key }}
+      {{ end }}
+      EOH
+        destination = "/certs/cli-key.pem"
+      }
+
+      resources {
+        network {
+          mode = "bridge"
+          port "http" { }
+        }
+      }
+
+      service {
+        name = "axiomatic"
+        port = "http"
+        tags = [ "proxy" ]
+
+        connect {
+          sidecar_service {
           }
         }
       }
       meta {
         repo = "http://github.com/jimrazmus/axiomatic"
       }
-      name = "axiomatic"
-      port = "8181"
-      tags = ["global", "consul", "configuration"]
     }
-    task "axiomatic" {
-      config {
-        image = "jimrazmus/axiomatic:rc"
-      }
-      driver = "docker"
-      env {
-        AXIOMATIC_IP = "0.0.0.0"
-        AXIOMATIC_PORT = "8181"
-        GITHUB_SECRET = "you-deserve-what-you-get"
-      }
-      resources {
-        network {
-          port "http" {}
-        }
-      }
-      # vault {
-      #   policies      = ["axiomatic"]
-      #   change_mode   = "signal"
-      #   change_signal = "SIGHUP"
-      # }
-    }
+  }
+  type = "service"
+
+  vault = {
+    policies = ["tls-policy"]
   }
 }
