@@ -2,8 +2,6 @@ package main
 
 import (
     "bytes"
-    "crypto/tls"
-    "crypto/x509"
     "errors"
     "fmt"
     "html/template"
