@@ -190,7 +190,7 @@ job "dir2consul-{{ .GitRepoName }}" {
     group "dir2consul" {
         task "dir2consul" {
             artifact {
-                destination = "local/{{ .GitRepoName }}"
+                destination = "local/repo"
                 source = "{{ .GitRepoURL }}"
             }
             config {
@@ -199,7 +199,8 @@ job "dir2consul-{{ .GitRepoName }}" {
             driver = "docker"
             env {
                 D2C_CONSUL_KEY_PREFIX = "services/{{ .GitRepoName }}/config"
-                D2C_CONSUL_SERVER = "{{ .ConsulServerURL }}"
+				D2C_CONSUL_SERVER = "{{ .ConsulServerURL }}"
+				D2C_DIRECTORY = "local/repo/{{ .GitRepoName }}"
             }
             meta {
                 commit-SHA = "{{ .HeadSHA }}"
