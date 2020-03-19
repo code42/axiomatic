@@ -49,6 +49,10 @@ var jobTemplate *template.Template
 type NomadJobData struct {
 	ConsulKeyPrefix string
 	ConsulServerURL string
+	// DEM
+	ConsulLBURL     string
+	ConsulToken     string
+	// EODEM
 	GitRepoName     string
 	GitRepoURL      string
 	HeadSHA         string
@@ -115,6 +119,10 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 		jobArgs := NomadJobData{
 			ConsulKeyPrefix: ConsulKeyPrefix,
 			ConsulServerURL: ConsulServerURL,
+			// DEM
+			ConsulLBURL:     ConsulLBURL,
+			ConsulToken:     ConsulToken,
+			// EODEM
 			GitRepoName:     e.Repo.GetFullName(),
 			GitRepoURL:      e.Repo.GetCloneURL(),
 			HeadSHA:         e.GetAfter(),
