@@ -190,7 +190,7 @@ job "dir2consul-{{ .GitRepoName }}" {
     group "dir2consul" {
         task "dir2consul" {
             artifact {
-                destination = "local/repo"
+                destination = "local/{{ .GitRepoName }}"
                 source = "{{ .GitRepoURL }}"
             }
             config {
@@ -200,7 +200,7 @@ job "dir2consul-{{ .GitRepoName }}" {
             env {
                 D2C_CONSUL_KEY_PREFIX = "services/{{ .GitRepoName }}/config"
                 D2C_CONSUL_SERVER = "{{ .ConsulServerURL }}"
-                D2C_DIRECTORY = "local/repo/{{ .GitRepoName }}"
+                D2C_DIRECTORY = "local/{{ .GitRepoName }}"
             }
             meta {
                 commit-SHA = "{{ .HeadSHA }}"
