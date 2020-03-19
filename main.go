@@ -167,8 +167,11 @@ func submitNomadJob(job *api.Job) error {
 
 	var jobResp *api.JobRegisterResponse
 	jobResp, _, err = nomadClient.Jobs().Register(job, nil)
+	if jobResp == (*api.JobRegisterResponse)(nil) {
+		return errors.New("jobResp is nil")
+	}
 	if jobResp.Warnings != "" {
-		log.Printf("Eval Warning (%s) %s", jobResp.EvalID, jobResp.Warnings)
+		log.Printf("Nomad job response: %+v", jobResp)
 		return errors.New(jobResp.Warnings)
 	}
 
