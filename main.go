@@ -167,6 +167,9 @@ func submitNomadJob(job *api.Job) error {
 
 	var jobResp *api.JobRegisterResponse
 	jobResp, _, err = nomadClient.Jobs().Register(job, nil)
+	if err != nil {
+		return err
+	}
 	if jobResp == (*api.JobRegisterResponse)(nil) {
 		return errors.New("jobResp is nil")
 	}
