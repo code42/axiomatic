@@ -184,7 +184,7 @@ func submitNomadJob(job *api.Job) error {
 // templateNomadJob returns a templated,json formatted, Nomad job definition as a string
 func templateNomadJob() string {
 	const jobTemplate = `
-job "dir2consul-{{ .GitRepoName }}" {
+job "dm-dir2consul-{{ .GitRepoName }}" {
     datacenters = ["dc1"]
     region = "global"
     group "dir2consul" {
@@ -194,7 +194,7 @@ job "dir2consul-{{ .GitRepoName }}" {
                 source = "{{ .GitRepoURL }}"
             }
             config {
-                image = "jimrazmus/dir2consul:v1.4.1"
+                image = "danamckiernan/dir2consul:rc"
             }
             driver = "docker"
             env {
@@ -215,3 +215,13 @@ job "dir2consul-{{ .GitRepoName }}" {
 `
 	return jobTemplate
 }
+
+// Emacs formatting variables
+
+// Local Variables:
+// mode: go
+// tab-width: 8
+// indent-tabs-mode: t
+// standard-indent: 8
+// End:
+ 
