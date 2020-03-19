@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/google/go-github/github"
@@ -55,6 +56,10 @@ func main() {
 	}
 	log.Println("AXIOMATIC_IP:", AxiomaticIP)
 	log.Println("AXIOMATIC_PORT:", AxiomaticPort)
+
+	env := os.Environ()
+	sort.Strings(env)
+	log.Printf("\nEnvironment\n\t%s", strings.Join(env, "\n\t"))
 
 	jobTemplate = template.Must(template.New("job").Parse(templateNomadJob()))
 
