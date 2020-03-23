@@ -28,9 +28,6 @@ var AxiomaticPort = getenv("AXIOMATIC_PORT", "8181")
 // ConsulKeyPrefix is the path prefix to prepend to all consul keys
 var ConsulKeyPrefix = getenv("D2C_CONSUL_KEY_PREFIX", "")
 
-// ConsulServerURL is the URL of the Consul server kv store
-var ConsulServerURL = getenv("D2C_CONSUL_SERVER", "http://localhost:8500/v1/kv")
-
 // GithubWebhookSecret is the secret token for validating webhook requests
 var GithubWebhookSecret = getenv("GITHUB_SECRET", "")
 
@@ -42,7 +39,6 @@ var jobTemplate *template.Template
 // NomadJobData contains data for job template rendering
 type NomadJobData struct {
 	ConsulKeyPrefix string
-	ConsulServerURL string
 	GitRepoName     string
 	GitRepoURL      string
 	HeadSHA         string
@@ -108,7 +104,6 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 	case *github.PushEvent:
 		jobArgs := NomadJobData{
 			ConsulKeyPrefix: ConsulKeyPrefix,
-			ConsulServerURL: ConsulServerURL,
 			GitRepoName:     e.Repo.GetFullName(),
 			GitRepoURL:      e.Repo.GetCloneURL(),
 			HeadSHA:         e.GetAfter(),
@@ -199,7 +194,6 @@ job "dir2consul-{{ .GitRepoName }}" {
             driver = "docker"
             env {
                 D2C_CONSUL_KEY_PREFIX = "services/{{ .GitRepoName }}/config"
-                D2C_CONSUL_SERVER = "{{ .ConsulServerURL }}"
                 D2C_DIRECTORY = "local/{{ .GitRepoName }}"
             }
             meta {

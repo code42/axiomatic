@@ -64,14 +64,13 @@ func TestHandleHealth(t *testing.T) {
 
 func TestTemplateToJob(t *testing.T) {
 	jobTemplate = template.Must(template.New("job").Parse(templateNomadJob()))
-	f := func(a string, b string, c string, d string, e string, f string) bool {
+	f := func(a string, b string, c string, d string, e string) bool {
 		jobArgs := NomadJobData{
 			ConsulKeyPrefix: a,
-			ConsulServerURL: b,
-			GitRepoName:     c,
-			GitRepoURL:      d,
-			HeadSHA:         e,
-			VaultToken:      f,
+			GitRepoName:     b,
+			GitRepoURL:      c,
+			HeadSHA:         d,
+			VaultToken:      e,
 		}
 		_, err := templateToJob(jobArgs)
 		if err != nil {

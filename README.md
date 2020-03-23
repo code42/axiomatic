@@ -35,7 +35,7 @@ Axiomatic uses environment variables to override the default configuration value
 ### dir2consul - The following configuration variables are passed to dir2consul
 
 * D2C_CONSUL_KEY_PREFIX is the path prefix to prepend to all consul keys. Default: ""
-* D2C_CONSUL_SERVER is the URL of the Consul server. Default: http://localhost:8500
+
 
 ## Installation
 
