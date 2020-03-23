@@ -28,9 +28,6 @@ var AxiomaticPort = getenv("AXIOMATIC_PORT", "8181")
 // ConsulKeyPrefix is the path prefix to prepend to all consul keys
 var ConsulKeyPrefix = getenv("D2C_CONSUL_KEY_PREFIX", "")
 
-// ConsulServerURL is the URL of the Consul server kv store
-var ConsulServerURL = getenv("D2C_CONSUL_SERVER", "http://localhost:8500/v1/kv")
-
 // GithubWebhookSecret is the secret token for validating webhook requests
 var GithubWebhookSecret = getenv("GITHUB_SECRET", "")
 
@@ -42,11 +39,11 @@ var jobTemplate *template.Template
 // NomadJobData contains data for job template rendering
 type NomadJobData struct {
 	ConsulKeyPrefix string
-	ConsulServerURL string
 	GitRepoName     string
 	GitRepoURL      string
 	HeadSHA         string
 	VaultToken      string
+	Environment     []string
 }
 
 func main() {
@@ -69,6 +66,17 @@ func main() {
 	serverAddr := strings.Join([]string{AxiomaticIP, AxiomaticPort}, ":")
 	log.Fatal(http.ListenAndServe(serverAddr, nil))
 	return
+}
+
+// filterConsul returns a slice of strings from ss that begin with "CONSUL_"
+func filterConsul(ss []string) []string {
+	r := []string{}
+	for _, s := range ss {
+		if strings.HasPrefix(s, "CONSUL_") {
+			r = append(r, s)
+		}
+	}
+	return r
 }
 
 // getenv returns the environment value for the given key or the default value when not found
@@ -108,11 +116,11 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 	case *github.PushEvent:
 		jobArgs := NomadJobData{
 			ConsulKeyPrefix: ConsulKeyPrefix,
-			ConsulServerURL: ConsulServerURL,
 			GitRepoName:     e.Repo.GetFullName(),
 			GitRepoURL:      e.Repo.GetCloneURL(),
 			HeadSHA:         e.GetAfter(),
 			VaultToken:      VaultToken,
+			Environment:     filterConsul(os.Environ()),
 		}
 		if debug {
 			log.Printf("jobArgs: %+v\n", jobArgs)
@@ -199,8 +207,10 @@ job "dir2consul-{{ .GitRepoName }}" {
             driver = "docker"
             env {
                 D2C_CONSUL_KEY_PREFIX = "services/{{ .GitRepoName }}/config"
-                D2C_CONSUL_SERVER = "{{ .ConsulServerURL }}"
                 D2C_DIRECTORY = "local/{{ .GitRepoName }}"
+			{{ range .Environment}}
+				{{.}}
+			{{ end }}
             }
             meta {
                 commit-SHA = "{{ .HeadSHA }}"

@@ -10,18 +10,18 @@ Axiomatic is a GitHub webhook handler that launches dir2consul as a Nomad batch 
 
 ## Configuration
 
-Axiomatic uses environment variables to override the default configuration values. The Nomad job definition should be adjusted to set these variables.
+Axiomatic uses environment variables to override the default configuration values. The Nomad job definition for the Axiomatic service should be adjusted to set these variables.
 
 ### Axiomatic
 
 * AXIOMATIC_IP is the IP address to bind. Default = 127.0.0.1
 * AXIOMATIC_PORT is the port number to bind. Default = 8181
 
-### GitHub
+#### GitHub
 
-* GITHUB_SECRET is the secret token for validating webhook requests. You *MUST* configure this value or the server will not start. There is no default value.
+* GITHUB_SECRET is the secret token for validating webhook requests. You **MUST** configure this value or the server will not start. There is no default value, only sorrow.
 
-### Nomad
+#### Nomad
 
 * NOMAD_ADDR is the address of the Nomad server. Default = http://127.0.0.1:4646
 * NOMAD_CACERT is the path to a PEM encoded CA cert file to use to verify the Nomad server SSL certificate.
@@ -32,12 +32,17 @@ Axiomatic uses environment variables to override the default configuration value
 * NOMAD_REGION is region of the Nomad servers to forward commands.
 * NOMAD_TOKEN is the SecretID of an ACL token to use to authenticate API requests.
 
-### dir2consul - The following configuration variables are passed to dir2consul
+### dir2consul
+
+The following configuration variables are passed to dir2consul
 
 * D2C_CONSUL_KEY_PREFIX is the path prefix to prepend to all consul keys. Default: ""
-* D2C_CONSUL_SERVER is the URL of the Consul server. Default: http://localhost:8500
+
+Axiomatic passes any environment variables beginning with "CONSUL_" through to dir2consul. This provides a convenient way to configure the dir2consul batch jobs launched by Axiomatic.
 
 ## Installation
+
+Axiomatic requires no installation. It ships as a Docker container meant for running as a service.
 
 ### Run the service on Nomad
 
@@ -65,6 +70,8 @@ Axiomatic needs a Vault policy that allows the service to submit batch jobs.
 *example policy TBD*
 
 ## Contributing
+
+Please follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification for your commit messages. Commit type options include: feat, fix, build, chore, ci, docs, style, refactor, perf, and test.
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
 
