@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"reflect"
 	"testing"
 	"testing/quick"
 )
@@ -71,6 +73,7 @@ func TestTemplateToJob(t *testing.T) {
 			GitRepoURL:      c,
 			HeadSHA:         d,
 			VaultToken:      e,
+			Environment:     []string{"CONSUL_TEST=1"},
 		}
 		_, err := templateToJob(jobArgs)
 		if err != nil {
@@ -81,5 +84,53 @@ func TestTemplateToJob(t *testing.T) {
 	err := quick.Check(f, nil)
 	if err != nil {
 		t.Error(err)
+	}
+}
+
+func TestFilterConsul(t *testing.T) {
+	cases := []struct {
+		name string
+		ss   []string
+		rs   []string
+	}{
+		{
+			"One Element Match",
+			[]string{"CONSUL_A=a"},
+			[]string{"CONSUL_A=a"},
+		},
+		{
+			"Two Element Match",
+			[]string{"CONSUL_A=a", "CONSUL_b=b"},
+			[]string{"CONSUL_A=a", "CONSUL_b=b"},
+		},
+		{
+			"Leading Element Match",
+			[]string{"CONSUL_1=1", "a=a", "b=b"},
+			[]string{"CONSUL_1=1"},
+		},
+		{
+			"Nested Element Match",
+			[]string{"a=a", "CONSUL_1=1", "b=b"},
+			[]string{"CONSUL_1=1"},
+		},
+		{
+			"Trailing Element Match",
+			[]string{"a=a", "b=b", "CONSUL_1=1"},
+			[]string{"CONSUL_1=1"},
+		},
+		{
+			"No Element Match",
+			[]string{"a=a", "b=b", "CONSULA_A=a"},
+			[]string{},
+		},
+	}
+
+	for i, tc := range cases {
+		t.Run(fmt.Sprintf("%d_%s", i, tc.name), func(t *testing.T) {
+			got := filterConsul(tc.ss)
+			if !reflect.DeepEqual(got, tc.rs) {
+				t.Errorf("got (%+v) want (%+v)", got, tc.rs)
+			}
+		})
 	}
 }

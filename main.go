@@ -43,6 +43,7 @@ type NomadJobData struct {
 	GitRepoURL      string
 	HeadSHA         string
 	VaultToken      string
+	Environment     []string
 }
 
 func main() {
@@ -65,6 +66,17 @@ func main() {
 	serverAddr := strings.Join([]string{AxiomaticIP, AxiomaticPort}, ":")
 	log.Fatal(http.ListenAndServe(serverAddr, nil))
 	return
+}
+
+// filterConsul returns a slice of strings from ss that begin with "CONSUL_"
+func filterConsul(ss []string) []string {
+	r := []string{}
+	for _, s := range ss {
+		if strings.HasPrefix(s, "CONSUL_") {
+			r = append(r, s)
+		}
+	}
+	return r
 }
 
 // getenv returns the environment value for the given key or the default value when not found
@@ -108,6 +120,7 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 			GitRepoURL:      e.Repo.GetCloneURL(),
 			HeadSHA:         e.GetAfter(),
 			VaultToken:      VaultToken,
+			Environment:     filterConsul(os.Environ()),
 		}
 		if debug {
 			log.Printf("jobArgs: %+v\n", jobArgs)
@@ -195,6 +208,9 @@ job "dir2consul-{{ .GitRepoName }}" {
             env {
                 D2C_CONSUL_KEY_PREFIX = "services/{{ .GitRepoName }}/config"
                 D2C_DIRECTORY = "local/{{ .GitRepoName }}"
+			{{ range .Environment}}
+				{{.}}
+			{{ end }}
             }
             meta {
                 commit-SHA = "{{ .HeadSHA }}"
