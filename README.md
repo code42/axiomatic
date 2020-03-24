@@ -1,7 +1,7 @@
 # Axiomatic
 
 ![Build](https://github.com/jimrazmus/axiomatic/workflows/Go/badge.svg?branch=master)
-[![CodeCov](https://codecov.io/gh/jimrazmus/axiomatic/branch/master/graph/badge.svg)](https://codecov.io/gh/jimrazmus/axiomatic)
+[![CodeCov](https://codecov.io/gh/code42/axiomatic/branch/master/graph/badge.svg)](https://codecov.io/gh/jimrazmus/axiomatic)
 [![License](http://img.shields.io/:license-mit-blue.svg?style=flat-square)](http://badges.mit-license.org)
 
 ## Summary
