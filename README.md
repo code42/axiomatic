@@ -18,9 +18,6 @@ Axiomatic uses environment variables to override the default configuration value
 * AXIOMATIC_GITHUB_SECRET is the secret token for validating webhook requests. You **MUST** configure this value or the server will not start. There is no default value, only sorrow.
 * AXIOMATIC_IP is the IP address to bind. Default = 127.0.0.1
 * AXIOMATIC_PORT is the port number to bind. Default = 8181
-
-#### Nomad
-
 * NOMAD_ADDR is the address of the Nomad server. Default = http://127.0.0.1:4646
 * NOMAD_CACERT is the path to a PEM encoded CA cert file to use to verify the Nomad server SSL certificate.
 * NOMAD_CAPATH is the path to a directory of PEM encoded CA cert files to verify the Nomad server SSL certificate.
