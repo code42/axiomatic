@@ -38,6 +38,7 @@ func main() {
 	jobTemplate = template.Must(template.New("job").Parse(templateNomadJob()))
 
 	http.HandleFunc("/health", handleHealth)
+	http.HandleFunc("/publickey", handlePublicKey)
 	http.HandleFunc("/webhook", handleWebhook)
 
 	log.Fatal(http.ListenAndServe(viper.GetString("IP")+":"+viper.GetString("PORT"), nil))
@@ -97,6 +98,12 @@ func startupMessage() string {
 func handleHealth(w http.ResponseWriter, r *http.Request) {
 	log.Println("Good to Serve")
 	fmt.Fprintf(w, "Good to Serve")
+	return
+}
+
+func handlePublicKey(w http.ResponseWriter, r *http.Request) {
+	log.Println("Public Key Request")
+	fmt.Fprintf(w, viper.GetString("SSH_PUB_KEY"))
 	return
 }
 

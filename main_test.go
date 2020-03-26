@@ -31,7 +31,26 @@ func TestHandleHealth(t *testing.T) {
 		t.Errorf("handleHealth returned %v instead of %v", status, http.StatusOK)
 	}
 	if rec.Body.String() != "Good to Serve" {
-		t.Errorf("handleHealth returned %v instead of %v", rec.Body.String(), "Good to Serve")
+		t.Errorf("handleHealth returned (%v) instead of (%v)", rec.Body.String(), "Good to Serve")
+	}
+}
+
+func TestPublicKey(t *testing.T) {
+	answer := "an ssh public key"
+	os.Setenv("AXIOMATIC_SSH_PUB_KEY", answer)
+	setupEnvironment()
+	req, err := http.NewRequest("GET", "/publickey", nil)
+	if err != nil {
+		t.Error(err)
+	}
+	rec := httptest.NewRecorder()
+	handler := http.HandlerFunc(handlePublicKey)
+	handler.ServeHTTP(rec, req)
+	if status := rec.Code; status != http.StatusOK {
+		t.Errorf("handlePublicKey returned %v instead of %v", status, http.StatusOK)
+	}
+	if rec.Body.String() != "an ssh public key" {
+		t.Errorf("handlePublicKey returned (%v) instead of (%v)", rec.Body.String(), answer)
 	}
 }
 
