@@ -45,11 +45,11 @@ func main() {
 	return
 }
 
-// filterConsul returns a slice of strings from ss that begin with "CONSUL_"
-func filterConsul(ss []string) []string {
+// filterEnvironment returns a slice of strings from ss that begin with "CONSUL_" or "D2C_"
+func filterEnvironment(ss []string) []string {
 	r := []string{}
 	for _, s := range ss {
-		if strings.HasPrefix(s, "CONSUL_") {
+		if strings.HasPrefix(s, "CONSUL_") || strings.HasPrefix(s, "D2C_") {
 			r = append(r, s)
 		}
 	}
@@ -132,7 +132,7 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 			GitRepoURL:  e.Repo.GetSSHURL(),
 			HeadSHA:     e.GetAfter(),
 			SshKey:      viper.GetString("SSH_PRIV_KEY"),
-			Environment: filterConsul(os.Environ()),
+			Environment: filterEnvironment(os.Environ()),
 		}
 
 		job, err := templateToJob(jobArgs)
