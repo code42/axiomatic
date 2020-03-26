@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bytes"
+	"flag"
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -10,6 +13,9 @@ import (
 	"testing"
 	"testing/quick"
 )
+
+// go test -update
+var update = flag.Bool("update", false, "update .golden files")
 
 func TestGetenvReturnsVal(t *testing.T) {
 	f := func(a string, b string, c string) bool {
@@ -133,4 +139,22 @@ func TestFilterConsul(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestStartupMessage(t *testing.T) {
+	os.Clearenv()
+	os.Setenv("TEST", "TestStartupMessage")
+	actual := []byte(startupMessage())
+	auFile := "testdata/TestStartupMessage.golden"
+	if *update {
+		ioutil.WriteFile(auFile, actual, 0644)
+	}
+	golden, err := ioutil.ReadFile(auFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(golden, actual) {
+		t.Errorf("failed\nexpected:\n%s\ngot:\n%s", string(golden[:]), string(actual[:]))
+	}
+
 }

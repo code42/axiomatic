@@ -16,9 +16,6 @@ import (
 	"github.com/hashicorp/nomad/jobspec"
 )
 
-// conditionally compile in or out the debug prints
-const debug = false
-
 // AxiomaticIP is the IP address to bind
 var AxiomaticIP = getenv("AXIOMATIC_IP", "127.0.0.1")
 
@@ -47,16 +44,11 @@ type NomadJobData struct {
 }
 
 func main() {
-	log.Println("Axiomatic Server Starting")
 	if GithubWebhookSecret == "" {
 		log.Fatal("You must configure GITHUB_SECRET! Axiomatic shutting down.")
 	}
-	log.Println("AXIOMATIC_IP:", AxiomaticIP)
-	log.Println("AXIOMATIC_PORT:", AxiomaticPort)
 
-	env := os.Environ()
-	sort.Strings(env)
-	log.Printf("\nEnvironment\n\t%s", strings.Join(env, "\n\t"))
+	fmt.Println(startupMessage())
 
 	jobTemplate = template.Must(template.New("job").Parse(templateNomadJob()))
 
@@ -86,6 +78,18 @@ func getenv(key string, _default string) string {
 		return _default
 	}
 	return val
+}
+
+func startupMessage() string {
+	banner := "\n------------\n Axiomatic \n------------\n"
+
+	config := fmt.Sprintf("Configuration\n\tAXIOMATIC_IP: %s\n\tAXIOMATIC_PORT: %s", AxiomaticIP, AxiomaticPort)
+
+	env := os.Environ()
+	sort.Strings(env)
+	environment := fmt.Sprintf("\nEnvironment\n\t%s", strings.Join(env, "\n\t"))
+
+	return banner + config + environment
 }
 
 func handleHealth(w http.ResponseWriter, r *http.Request) {
@@ -121,9 +125,6 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 			HeadSHA:         e.GetAfter(),
 			VaultToken:      VaultToken,
 			Environment:     filterConsul(os.Environ()),
-		}
-		if debug {
-			log.Printf("jobArgs: %+v\n", jobArgs)
 		}
 
 		job, err := templateToJob(jobArgs)
