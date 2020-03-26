@@ -15,6 +15,7 @@ require (
 	github.com/hashicorp/raft v1.1.2 // indirect
 	github.com/hashicorp/vault/api v1.0.4 // indirect
 	github.com/mitchellh/hashstructure v1.0.0 // indirect
+	github.com/spf13/viper v1.6.2
 	github.com/stretchr/testify v1.5.1 // indirect
 	github.com/ugorji/go v1.1.7 // indirect
 	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975 // indirect
