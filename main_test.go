@@ -76,7 +76,7 @@ func TestTemplateToJob(t *testing.T) {
 	}
 }
 
-func TestFilterConsul(t *testing.T) {
+func TestFilterEnvironment(t *testing.T) {
 	cases := []struct {
 		name string
 		ss   []string
@@ -112,11 +112,16 @@ func TestFilterConsul(t *testing.T) {
 			[]string{"a=a", "b=b", "CONSULA_A=a"},
 			[]string{},
 		},
+		{
+			"One d2c Element Match",
+			[]string{"a=a", "b=b", "D2C_A=a"},
+			[]string{"D2C_A=a"},
+		},
 	}
 
 	for i, tc := range cases {
 		t.Run(fmt.Sprintf("%d_%s", i, tc.name), func(t *testing.T) {
-			got := filterConsul(tc.ss)
+			got := filterEnvironment(tc.ss)
 			if !reflect.DeepEqual(got, tc.rs) {
 				t.Errorf("got (%+v) want (%+v)", got, tc.rs)
 			}
