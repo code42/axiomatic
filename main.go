@@ -124,7 +124,7 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 			GitRepoName: e.Repo.GetFullName(),
 			GitRepoURL:  e.Repo.GetSSHURL(),
 			HeadSHA:     e.GetAfter(),
-			SshKey:      viper.GetString("SSH_KEY"),
+			SshKey:      viper.GetString("SSH_PRIV_KEY"),
 			Environment: filterConsul(os.Environ()),
 		}
 
