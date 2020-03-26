@@ -21,12 +21,11 @@ var jobTemplate *template.Template
 
 // NomadJobData contains data for job template rendering
 type NomadJobData struct {
-	ConsulKeyPrefix string
-	GitRepoName     string
-	GitRepoURL      string
-	HeadSHA         string
-	VaultToken      string
-	Environment     []string
+	GitRepoName string
+	GitRepoURL  string
+	HeadSHA     string
+	SshKey      string
+	Environment []string
 }
 
 func main() {
@@ -63,10 +62,12 @@ func setupEnvironment() {
 	viper.SetDefault("GITHUB_SECRET", "")
 	viper.SetDefault("IP", "127.0.0.1")
 	viper.SetDefault("PORT", "8181")
+	viper.SetDefault("SSH_KEY", "")
 	viper.AutomaticEnv()
 	viper.BindEnv("GITHUB_SECRET")
 	viper.BindEnv("IP")
 	viper.BindEnv("PORT")
+	viper.BindEnv("SSH_KEY")
 }
 
 func startupMessage() string {
@@ -109,8 +110,9 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 	case *github.PushEvent:
 		jobArgs := NomadJobData{
 			GitRepoName: e.Repo.GetFullName(),
-			GitRepoURL:  e.Repo.GetCloneURL(),
+			GitRepoURL:  e.Repo.GetSSHURL(),
 			HeadSHA:     e.GetAfter(),
+			SshKey:      viper.GetString("SSH_KEY"),
 			Environment: filterConsul(os.Environ()),
 		}
 
@@ -177,7 +179,7 @@ func submitNomadJob(job *api.Job) error {
 	return nil
 }
 
-// templateNomadJob returns a templated,json formatted, Nomad job definition as a string
+// templateNomadJob returns a Nomad job definition as a string
 func templateNomadJob() string {
 	const jobTemplate = `
 job "dir2consul-{{ .GitRepoName }}" {
@@ -187,7 +189,10 @@ job "dir2consul-{{ .GitRepoName }}" {
         task "dir2consul" {
             artifact {
                 destination = "local/{{ .GitRepoName }}"
-                source = "{{ .GitRepoURL }}"
+				source = "{{ .GitRepoURL }}"
+                options {
+                    sshkey = "{{ .SshKey }}"
+                }
             }
             config {
                 image = "jimrazmus/dir2consul:v1.4.1"

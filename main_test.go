@@ -37,11 +37,12 @@ func TestHandleHealth(t *testing.T) {
 
 func TestTemplateToJob(t *testing.T) {
 	jobTemplate = template.Must(template.New("job").Parse(templateNomadJob()))
-	f := func(a string, b string, c string) bool {
+	f := func(a string, b string, c string, d string) bool {
 		jobArgs := NomadJobData{
 			GitRepoName: a,
 			GitRepoURL:  b,
 			HeadSHA:     c,
+			SshKey:      d,
 			Environment: []string{"CONSUL_TEST=1"},
 		}
 		_, err := templateToJob(jobArgs)
@@ -115,6 +116,9 @@ func TestSetupEnvironment(t *testing.T) {
 	}
 	if viper.GetString("PORT") != "8181" {
 		t.Error("AXIOMATIC_PORT != 8181")
+	}
+	if viper.GetString("SSH_KEY") != "" {
+		t.Error("AXIOMATIC_SSH_KEY is not an empty string")
 	}
 }
 
