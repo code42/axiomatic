@@ -117,8 +117,24 @@ func TestSetupEnvironment(t *testing.T) {
 	if viper.GetString("PORT") != "8181" {
 		t.Error("AXIOMATIC_PORT != 8181")
 	}
-	if viper.GetString("SSH_KEY") != "" {
-		t.Error("AXIOMATIC_SSH_KEY is not an empty string")
+	if viper.GetString("SSH_PRIV_KEY") != "" {
+		t.Error("AXIOMATIC_SSH_PRIV_KEY is not an empty string")
+	}
+	if viper.GetString("SSH_PUB_KEY") != "" {
+		t.Error("AXIOMATIC_SSH_PUB_KEY is not an empty string")
+	}
+}
+
+func TestIsMissingConfiguration(t *testing.T) {
+	os.Clearenv()
+	if isMissingConfiguration() != true {
+		t.Error("expected: (true) got: (false)")
+	}
+	os.Setenv("AXIOMATIC_GITHUB_SECRET", "testing")
+	os.Setenv("AXIOMATIC_SSH_PRIV_KEY", "testing")
+	os.Setenv("AXIOMATIC_SSH_PUB_KEY", "testing")
+	if isMissingConfiguration() != false {
+		t.Error("expected: (false) got: (true)")
 	}
 }
 

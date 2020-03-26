@@ -30,11 +30,9 @@ type NomadJobData struct {
 
 func main() {
 	setupEnvironment()
-
-	if viper.GetString("GITHUB_SECRET") == "" {
-		log.Fatal("You must configure AXIOMATIC_GITHUB_SECRET! Axiomatic shutting down.")
+	if isMissingConfiguration() {
+		log.Fatal("Shutting down.")
 	}
-
 	fmt.Println(startupMessage())
 
 	jobTemplate = template.Must(template.New("job").Parse(templateNomadJob()))
@@ -62,12 +60,26 @@ func setupEnvironment() {
 	viper.SetDefault("GITHUB_SECRET", "")
 	viper.SetDefault("IP", "127.0.0.1")
 	viper.SetDefault("PORT", "8181")
-	viper.SetDefault("SSH_KEY", "")
+	viper.SetDefault("SSH_PRIV_KEY", "")
+	viper.SetDefault("SSH_PUB_KEY", "")
 	viper.AutomaticEnv()
 	viper.BindEnv("GITHUB_SECRET")
 	viper.BindEnv("IP")
 	viper.BindEnv("PORT")
-	viper.BindEnv("SSH_KEY")
+	viper.BindEnv("SSH_PRIV_KEY")
+	viper.BindEnv("SSH_PUB_KEY")
+}
+
+func isMissingConfiguration() bool {
+	r := false
+	vs := []string{"GITHUB_SECRET", "SSH_PRIV_KEY", "SSH_PUB_KEY"}
+	for _, v := range vs {
+		if viper.GetString(v) == "" {
+			log.Printf("You must configure AXIOMATIC_%s!", v)
+			r = true
+		}
+	}
+	return r
 }
 
 func startupMessage() string {
