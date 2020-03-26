@@ -27,13 +27,7 @@ Axiomatic uses environment variables to override the default configuration value
 * NOMAD_REGION is region of the Nomad servers to forward commands.
 * NOMAD_TOKEN is the SecretID of an ACL token to use to authenticate API requests.
 
-### dir2consul
-
-The following configuration variables are passed to dir2consul
-
-* D2C_CONSUL_KEY_PREFIX is the path prefix to prepend to all consul keys. Default: ""
-
-Axiomatic passes any environment variables beginning with "CONSUL_" through to dir2consul. This provides a convenient way to configure the dir2consul batch jobs launched by Axiomatic.
+Axiomatic passes environment variables, beginning with "CONSUL_" or "D2C_", through to dir2consul. This provides a convenient way to configure the dir2consul batch jobs launched by Axiomatic.
 
 ## Installation
 
