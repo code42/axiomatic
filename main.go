@@ -16,9 +16,6 @@ import (
 	"github.com/hashicorp/nomad/jobspec"
 )
 
-// conditionally compile in or out the debug prints
-const debug = false
-
 // AxiomaticIP is the IP address to bind
 var AxiomaticIP = getenv("AXIOMATIC_IP", "127.0.0.1")
 
@@ -128,9 +125,6 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 			HeadSHA:         e.GetAfter(),
 			VaultToken:      VaultToken,
 			Environment:     filterConsul(os.Environ()),
-		}
-		if debug {
-			log.Printf("jobArgs: %+v\n", jobArgs)
 		}
 
 		job, err := templateToJob(jobArgs)
