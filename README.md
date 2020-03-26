@@ -15,10 +15,11 @@ Axiomatic uses environment variables to override the default configuration value
 
 ### Axiomatic
 
-* AXIOMATIC_GITHUB_SECRET is the secret token for validating webhook requests. You **MUST** configure this value or the server will not start. There is no default value, only sorrow.
+* AXIOMATIC_GITHUB_SECRET (**required**) is the secret token for validating webhook requests. There is no default value, only sorrow.
 * AXIOMATIC_IP is the IP address to bind. Default = 127.0.0.1
 * AXIOMATIC_PORT is the port number to bind. Default = 8181
-* AXIOMATIC_SSH_KEY is a private ssh key used for cloning repositories. It must be base64 encoded.
+* AXIOMATIC_SSH_PRIV_KEY (**required**) is the private ssh key used for cloning repositories. It must be base64 encoded.
+* AXIOMATIC_SSH_PUB_KEY (**required**) is the public ssh key used for cloning repositories.
 * NOMAD_ADDR is the address of the Nomad server. Default = http://127.0.0.1:4646
 * NOMAD_CACERT is the path to a PEM encoded CA cert file to use to verify the Nomad server SSL certificate.
 * NOMAD_CAPATH is the path to a directory of PEM encoded CA cert files to verify the Nomad server SSL certificate.
@@ -47,9 +48,11 @@ Axiomatic requires no installation. It ships as a Docker container meant for run
 #> nomad job run -check-index 0 axiomatic.nomad
 ```
 
-### Add a GitHub Repo Webhook
+### Setup the GitHub Repo Webhook and SSH Key
 
-1. Open the Settings tab for your repo and choose Webhooks in the menu
+1. Open the Settings tab for your repo and choose "Deploy keys" in the menu
+1. Add the ssh public key as a repository deploy key
+1. Open the Settings tab for your repo and choose "Webhooks" in the menu
 1. Press the "Add webhook" button
 1. Enter your Axiomatic service URL in the Payload URL field. E.g. "https://axiomatic.example.com/webhook"
 1. Enter your Axiomatic github secret in the Secret field
