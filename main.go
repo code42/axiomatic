@@ -14,22 +14,8 @@ import (
 	"github.com/google/go-github/github"
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/nomad/jobspec"
+	"github.com/spf13/viper"
 )
-
-// AxiomaticIP is the IP address to bind
-var AxiomaticIP = getenv("AXIOMATIC_IP", "127.0.0.1")
-
-// AxiomaticPort is the port number to bind
-var AxiomaticPort = getenv("AXIOMATIC_PORT", "8181")
-
-// ConsulKeyPrefix is the path prefix to prepend to all consul keys
-var ConsulKeyPrefix = getenv("D2C_CONSUL_KEY_PREFIX", "")
-
-// GithubWebhookSecret is the secret token for validating webhook requests
-var GithubWebhookSecret = getenv("GITHUB_SECRET", "")
-
-// VaultToken is the token used to access the Nomad server
-var VaultToken = getenv("VAULT_TOKEN", "")
 
 var jobTemplate *template.Template
 
@@ -44,8 +30,10 @@ type NomadJobData struct {
 }
 
 func main() {
-	if GithubWebhookSecret == "" {
-		log.Fatal("You must configure GITHUB_SECRET! Axiomatic shutting down.")
+	setupEnvironment()
+
+	if viper.GetString("GITHUB_SECRET") == "" {
+		log.Fatal("You must configure AXIOMATIC_GITHUB_SECRET! Axiomatic shutting down.")
 	}
 
 	fmt.Println(startupMessage())
@@ -55,8 +43,7 @@ func main() {
 	http.HandleFunc("/health", handleHealth)
 	http.HandleFunc("/webhook", handleWebhook)
 
-	serverAddr := strings.Join([]string{AxiomaticIP, AxiomaticPort}, ":")
-	log.Fatal(http.ListenAndServe(serverAddr, nil))
+	log.Fatal(http.ListenAndServe(viper.GetString("IP")+":"+viper.GetString("PORT"), nil))
 	return
 }
 
@@ -71,19 +58,21 @@ func filterConsul(ss []string) []string {
 	return r
 }
 
-// getenv returns the environment value for the given key or the default value when not found
-func getenv(key string, _default string) string {
-	val, ok := os.LookupEnv(key)
-	if !ok {
-		return _default
-	}
-	return val
+func setupEnvironment() {
+	viper.SetEnvPrefix("AXIOMATIC")
+	viper.SetDefault("GITHUB_SECRET", "")
+	viper.SetDefault("IP", "127.0.0.1")
+	viper.SetDefault("PORT", "8181")
+	viper.AutomaticEnv()
+	viper.BindEnv("GITHUB_SECRET")
+	viper.BindEnv("IP")
+	viper.BindEnv("PORT")
 }
 
 func startupMessage() string {
 	banner := "\n------------\n Axiomatic \n------------\n"
 
-	config := fmt.Sprintf("Configuration\n\tAXIOMATIC_IP: %s\n\tAXIOMATIC_PORT: %s", AxiomaticIP, AxiomaticPort)
+	config := fmt.Sprintf("Configuration\n\tAXIOMATIC_IP: %s\n\tAXIOMATIC_PORT: %s", viper.GetString("IP"), viper.GetString("PORT"))
 
 	env := os.Environ()
 	sort.Strings(env)
@@ -100,7 +89,7 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 
 func handleWebhook(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	payload, err := github.ValidatePayload(r, []byte(GithubWebhookSecret))
+	payload, err := github.ValidatePayload(r, []byte(viper.GetString("GITHUB_SECRET")))
 	if err != nil {
 		log.Printf("error validating request body: err=%s\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -119,12 +108,10 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 		log.Println("GitHub Pinged the Webhook")
 	case *github.PushEvent:
 		jobArgs := NomadJobData{
-			ConsulKeyPrefix: ConsulKeyPrefix,
-			GitRepoName:     e.Repo.GetFullName(),
-			GitRepoURL:      e.Repo.GetCloneURL(),
-			HeadSHA:         e.GetAfter(),
-			VaultToken:      VaultToken,
-			Environment:     filterConsul(os.Environ()),
+			GitRepoName: e.Repo.GetFullName(),
+			GitRepoURL:  e.Repo.GetCloneURL(),
+			HeadSHA:     e.GetAfter(),
+			Environment: filterConsul(os.Environ()),
 		}
 
 		job, err := templateToJob(jobArgs)

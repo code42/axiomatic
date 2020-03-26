@@ -12,47 +12,12 @@ import (
 	"reflect"
 	"testing"
 	"testing/quick"
+
+	"github.com/spf13/viper"
 )
 
 // go test -update
 var update = flag.Bool("update", false, "update .golden files")
-
-func TestGetenvReturnsVal(t *testing.T) {
-	f := func(a string, b string, c string) bool {
-		os.Clearenv()
-		// skip testing empty variable key
-		if a == "" {
-			return true
-		}
-		err := os.Setenv(a, b)
-		if err != nil {
-			t.Error(err)
-		}
-		// test we get back the randomly generated value
-		if getenv(a, c) == b {
-			return true
-		}
-		return false
-	}
-	err := quick.Check(f, nil)
-	if err != nil {
-		t.Error(err)
-	}
-}
-
-func TestGetenvReturnsDefault(t *testing.T) {
-	f := func(a string, b string) bool {
-		os.Clearenv()
-		if getenv(a, b) == b {
-			return true
-		}
-		return false
-	}
-	err := quick.Check(f, nil)
-	if err != nil {
-		t.Error(err)
-	}
-}
 
 func TestHandleHealth(t *testing.T) {
 	req, err := http.NewRequest("GET", "/health", nil)
@@ -72,14 +37,12 @@ func TestHandleHealth(t *testing.T) {
 
 func TestTemplateToJob(t *testing.T) {
 	jobTemplate = template.Must(template.New("job").Parse(templateNomadJob()))
-	f := func(a string, b string, c string, d string, e string) bool {
+	f := func(a string, b string, c string) bool {
 		jobArgs := NomadJobData{
-			ConsulKeyPrefix: a,
-			GitRepoName:     b,
-			GitRepoURL:      c,
-			HeadSHA:         d,
-			VaultToken:      e,
-			Environment:     []string{"CONSUL_TEST=1"},
+			GitRepoName: a,
+			GitRepoURL:  b,
+			HeadSHA:     c,
+			Environment: []string{"CONSUL_TEST=1"},
 		}
 		_, err := templateToJob(jobArgs)
 		if err != nil {
@@ -138,6 +101,20 @@ func TestFilterConsul(t *testing.T) {
 				t.Errorf("got (%+v) want (%+v)", got, tc.rs)
 			}
 		})
+	}
+}
+
+func TestSetupEnvironment(t *testing.T) {
+	os.Clearenv()
+	setupEnvironment()
+	if viper.GetString("GITHUB_SECRET") != "" {
+		t.Error("AXIOMATIC_GITHUB_SECRET is not an empty string")
+	}
+	if viper.GetString("IP") != "127.0.0.1" {
+		t.Error("AXIOMATIC_IP != 127.0.0.1")
+	}
+	if viper.GetString("PORT") != "8181" {
+		t.Error("AXIOMATIC_PORT != 8181")
 	}
 }
 
