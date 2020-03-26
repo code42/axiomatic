@@ -132,7 +132,7 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 			GitRepoURL:  e.Repo.GetSSHURL(),
 			HeadSHA:     e.GetAfter(),
 			SshKey:      viper.GetString("SSH_PRIV_KEY"),
-			Environment: filterConsul(os.Environ()),
+			Environment: filterEnvironment(os.Environ()),
 		}
 
 		job, err := templateToJob(jobArgs)
