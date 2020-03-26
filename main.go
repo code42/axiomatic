@@ -21,26 +21,24 @@ var jobTemplate *template.Template
 
 // NomadJobData contains data for job template rendering
 type NomadJobData struct {
-	ConsulKeyPrefix string
-	GitRepoName     string
-	GitRepoURL      string
-	HeadSHA         string
-	VaultToken      string
-	Environment     []string
+	GitRepoName string
+	GitRepoURL  string
+	HeadSHA     string
+	SshKey      string
+	Environment []string
 }
 
 func main() {
 	setupEnvironment()
-
-	if viper.GetString("GITHUB_SECRET") == "" {
-		log.Fatal("You must configure AXIOMATIC_GITHUB_SECRET! Axiomatic shutting down.")
+	if isMissingConfiguration() {
+		log.Fatal("Shutting down.")
 	}
-
 	fmt.Println(startupMessage())
 
 	jobTemplate = template.Must(template.New("job").Parse(templateNomadJob()))
 
 	http.HandleFunc("/health", handleHealth)
+	http.HandleFunc("/publickey", handlePublicKey)
 	http.HandleFunc("/webhook", handleWebhook)
 
 	log.Fatal(http.ListenAndServe(viper.GetString("IP")+":"+viper.GetString("PORT"), nil))
@@ -63,10 +61,26 @@ func setupEnvironment() {
 	viper.SetDefault("GITHUB_SECRET", "")
 	viper.SetDefault("IP", "127.0.0.1")
 	viper.SetDefault("PORT", "8181")
+	viper.SetDefault("SSH_PRIV_KEY", "")
+	viper.SetDefault("SSH_PUB_KEY", "")
 	viper.AutomaticEnv()
 	viper.BindEnv("GITHUB_SECRET")
 	viper.BindEnv("IP")
 	viper.BindEnv("PORT")
+	viper.BindEnv("SSH_PRIV_KEY")
+	viper.BindEnv("SSH_PUB_KEY")
+}
+
+func isMissingConfiguration() bool {
+	r := false
+	vs := []string{"GITHUB_SECRET", "SSH_PRIV_KEY", "SSH_PUB_KEY"}
+	for _, v := range vs {
+		if viper.GetString(v) == "" {
+			log.Printf("You must configure AXIOMATIC_%s!", v)
+			r = true
+		}
+	}
+	return r
 }
 
 func startupMessage() string {
@@ -84,6 +98,12 @@ func startupMessage() string {
 func handleHealth(w http.ResponseWriter, r *http.Request) {
 	log.Println("Good to Serve")
 	fmt.Fprintf(w, "Good to Serve")
+	return
+}
+
+func handlePublicKey(w http.ResponseWriter, r *http.Request) {
+	log.Println("Public Key Request")
+	fmt.Fprintf(w, viper.GetString("SSH_PUB_KEY"))
 	return
 }
 
@@ -109,8 +129,9 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 	case *github.PushEvent:
 		jobArgs := NomadJobData{
 			GitRepoName: e.Repo.GetFullName(),
-			GitRepoURL:  e.Repo.GetCloneURL(),
+			GitRepoURL:  e.Repo.GetSSHURL(),
 			HeadSHA:     e.GetAfter(),
+			SshKey:      viper.GetString("SSH_PRIV_KEY"),
 			Environment: filterConsul(os.Environ()),
 		}
 
@@ -177,7 +198,7 @@ func submitNomadJob(job *api.Job) error {
 	return nil
 }
 
-// templateNomadJob returns a templated,json formatted, Nomad job definition as a string
+// templateNomadJob returns a Nomad job definition as a string
 func templateNomadJob() string {
 	const jobTemplate = `
 job "dir2consul-{{ .GitRepoName }}" {
@@ -187,7 +208,10 @@ job "dir2consul-{{ .GitRepoName }}" {
         task "dir2consul" {
             artifact {
                 destination = "local/{{ .GitRepoName }}"
-                source = "{{ .GitRepoURL }}"
+				source = "{{ .GitRepoURL }}"
+                options {
+                    sshkey = "{{ .SshKey }}"
+                }
             }
             config {
                 image = "jimrazmus/dir2consul:v1.4.1"
