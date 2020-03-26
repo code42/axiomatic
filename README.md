@@ -7,7 +7,7 @@
 
 ## Summary
 
-Axiomatic is a GitHub webhook handler that launches dir2consul as a Nomad batch job.
+Axiomatic is a GitHub webhook handler that launches [dir2consul](https://github.com/code42/dir2consul) as a Nomad batch job.
 
 ## Configuration
 
@@ -15,12 +15,9 @@ Axiomatic uses environment variables to override the default configuration value
 
 ### Axiomatic
 
+* AXIOMATIC_GITHUB_SECRET is the secret token for validating webhook requests. You **MUST** configure this value or the server will not start. There is no default value, only sorrow.
 * AXIOMATIC_IP is the IP address to bind. Default = 127.0.0.1
 * AXIOMATIC_PORT is the port number to bind. Default = 8181
-
-#### GitHub
-
-* GITHUB_SECRET is the secret token for validating webhook requests. You **MUST** configure this value or the server will not start. There is no default value, only sorrow.
 
 #### Nomad
 
