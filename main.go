@@ -206,7 +206,7 @@ job "dm-dir2consul-{{ .GitRepoName }}" {
         task "dir2consul" {
             artifact {
                 destination = "local/{{ .GitRepoName }}"
-                source = "{{ .GitRepoURL }}"
+                source = "git::{{ .GitRepoURL }}"
             }
             config {
                 image = "danamckiernan/dir2consul:rc"
@@ -219,7 +219,7 @@ job "dm-dir2consul-{{ .GitRepoName }}" {
                 D2C_DEFAULT_CONFIG_TYPE="properties"
                 CONSUL_HTTP_ADDR = "{{ .ConsulLBURL }}"
                 CONSUL_HTTP_TOKEN = "{{ .ConsulToken }}"
-                DC2_VERBOSE = true
+                D2C_VERBOSE = true
             }
             meta {
                 commit-SHA = "{{ .HeadSHA }}"
