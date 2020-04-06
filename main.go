@@ -123,7 +123,8 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 			ConsulLBURL:     ConsulLBURL,
 			ConsulToken:     ConsulToken,
 			// EODEM
-			GitRepoName:     e.Repo.GetFullName(),
+			// GitRepoName:     e.Repo.GetFullName(),
+			GitRepoName:     e.Repo.GetName(),
 			GitRepoURL:      e.Repo.GetCloneURL(),
 			HeadSHA:         e.GetAfter(),
 			VaultToken:      VaultToken,
@@ -214,7 +215,7 @@ job "dm-dir2consul-{{ .GitRepoName }}" {
             env {
                 D2C_CONSUL_KEY_PREFIX = "services/{{ .GitRepoName }}/config"
                 D2C_CONSUL_SERVER = "{{ .ConsulServerURL }}"
-                D2C_DIRECTORY = "./local/{{ .GitRepoName }}"
+                D2C_DIRECTORY = "local/{{ .GitRepoName }}"
                 D2C_DEFAULT_CONFIG_TYPE="properties"
                 CONSUL_HTTP_ADDR = "{{ .ConsulLBURL }}"
                 CONSUL_HTTP_TOKEN = "{{ .ConsulToken }}"
