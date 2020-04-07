@@ -225,7 +225,7 @@ job "dm-dir2consul-{{ .GitRepoName }}" {
                 commit-SHA = "{{ .HeadSHA }}"
             }
             vault = {
-                policies = [ "{{ .GitRepoName }}-write" ]
+                policies = [ "consul-{{ .GitRepoName }}-write" ]
             }
             template {
 
