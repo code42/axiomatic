@@ -224,6 +224,17 @@ job "dm-dir2consul-{{ .GitRepoName }}" {
             meta {
                 commit-SHA = "{{ .HeadSHA }}"
             }
+            vault = {
+                policies = [ "{{ .GitRepoName }}-write" ]
+            }
+            template {
+                data = <<EOF
+CONSUL_HTTP_TOKEN={{"{{"}} with secret "config/creds/{{ .GitRepoName }}-role" {{"}}"}}{{"{{"}} .Data.token {{"}}"}}{{"{{"}} end {{"}}"}}
+EOF
+                destination = "secrets/{{ .GitRepoName }}-token.env"
+                env = true
+            }
+
         }
     }
     type = "batch"
