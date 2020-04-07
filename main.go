@@ -218,20 +218,11 @@ job "dm-dir2consul-{{ .GitRepoName }}" {
                 D2C_DIRECTORY = "/local/{{ .GitRepoName }}"
                 D2C_DEFAULT_CONFIG_TYPE="properties"
                 CONSUL_HTTP_ADDR = "{{ .ConsulLBURL }}"
+                CONSUL_HTTP_TOKEN = "{{ .ConsulToken }}"
                 D2C_VERBOSE = true
             }
             meta {
                 commit-SHA = "{{ .HeadSHA }}"
-            }
-            vault = {
-                policies = ["{{ .GitRepoName }}-write"]
-            }
-            template {
-                data = <<EOF
-CONSUL_HTTP_TOKEN="{{ with secret "config/creds/junkhooks-role" }}{{ .Data.token }}{{ end }}"
-EOF
-                destination = "secrets/consul-acl.env"
-                env = true
             }
         }
     }
