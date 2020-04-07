@@ -229,7 +229,7 @@ job "dm-dir2consul-{{ .GitRepoName }}" {
             }
             template {
                 data = <<EOF
-CONSUL_HTTP_TOKEN={{"{{"}} with secret &quot;config/creds/{{ .GitRepoName }}-role&quote; {{"}}{{"}} .Data.token {{"}}{{"}} end {{"}}"}}
+CONSUL_HTTP_TOKEN={{"{{"}} with secret 'config/creds/{{ .GitRepoName }}-role' {{"}}{{"}} .Data.token {{"}}{{"}} end {{"}}"}}
 EOF
                 destination = "secrets/{{ .GitRepoName }}-token.env"
                 env = true
