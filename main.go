@@ -228,9 +228,11 @@ job "dm-dir2consul-{{ .GitRepoName }}" {
                 policies = [ "{{ .GitRepoName }}-write" ]
             }
             template {
-                data = <<EOF
-CONSUL_HTTP_TOKEN={{"{{"}} with secret 'config/creds/{{ .GitRepoName }}-role' {{"}}{{"}} .Data.token {{"}}{{"}} end {{"}}"}}
-EOF
+
+                data = "CONSUL_HTTP_TOKEN={_ with secret \"config/creds/{{ .GitRepoName }}-role\" _}{_ .Data.token _}{_ end _}"
+
+                left_delimiter = "{_"
+                right_delimiter = "_}"
                 destination = "secrets/{{ .GitRepoName }}-token.env"
                 env = true
             }
