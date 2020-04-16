@@ -31,12 +31,6 @@ var ConsulKeyPrefix = getenv("D2C_CONSUL_KEY_PREFIX", "")
 // ConsulServerURL is the URL of the Consul server kv store
 var ConsulServerURL = getenv("D2C_CONSUL_SERVER", "http://localhost:8500/v1/kv")
 
-// DEM
-// Simpler(?) consul stuff
-var ConsulLBURL = getenv("CONSUL_HTTP_ADDR", "")
-var ConsulToken = getenv("CONSUL_HTTP_TOKEN", "")
-// EODEM
-
 // GithubWebhookSecret is the secret token for validating webhook requests
 var GithubWebhookSecret = getenv("GITHUB_SECRET", "")
 
@@ -49,10 +43,6 @@ var jobTemplate *template.Template
 type NomadJobData struct {
 	ConsulKeyPrefix string
 	ConsulServerURL string
-	// DEM
-	ConsulLBURL     string
-	ConsulToken     string
-	// EODEM
 	GitRepoName     string
 	GitRepoURL      string
 	HeadSHA         string
@@ -119,11 +109,6 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 		jobArgs := NomadJobData{
 			ConsulKeyPrefix: ConsulKeyPrefix,
 			ConsulServerURL: ConsulServerURL,
-			// DEM
-			ConsulLBURL:     ConsulLBURL,
-			ConsulToken:     ConsulToken,
-			// EODEM
-			// GitRepoName:     e.Repo.GetFullName(),
 			GitRepoName:     e.Repo.GetName(),
 			GitRepoURL:      e.Repo.GetCloneURL(),
 			HeadSHA:         e.GetAfter(),
@@ -199,7 +184,7 @@ func submitNomadJob(job *api.Job) error {
 // templateNomadJob returns a templated,json formatted, Nomad job definition as a string
 func templateNomadJob() string {
 	const jobTemplate = `
-job "dm-dir2consul-{{ .GitRepoName }}" {
+job "dir2consul-{{ .GitRepoName }}" {
     datacenters = ["dc1"]
     region = "global"
     group "dir2consul" {
@@ -209,7 +194,7 @@ job "dm-dir2consul-{{ .GitRepoName }}" {
                 source = "git::{{ .GitRepoURL }}"
             }
             config {
-                image = "danamckiernan/dir2consul:rc"
+                image = "jimrazmus/dir2consul:rc"
             }
             driver = "docker"
             env {
@@ -217,8 +202,6 @@ job "dm-dir2consul-{{ .GitRepoName }}" {
                 D2C_CONSUL_SERVER = "{{ .ConsulServerURL }}"
                 D2C_DIRECTORY = "/local/{{ .GitRepoName }}"
                 D2C_DEFAULT_CONFIG_TYPE="properties"
-                CONSUL_HTTP_ADDR = "{{ .ConsulLBURL }}"
-                CONSUL_HTTP_TOKEN = "{{ .ConsulToken }}"
                 D2C_VERBOSE = true
             }
             meta {
