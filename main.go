@@ -14,70 +14,85 @@ import (
 	"github.com/google/go-github/github"
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/nomad/jobspec"
+	"github.com/spf13/viper"
 )
-
-// conditionally compile in or out the debug prints
-const debug = false
-
-// AxiomaticIP is the IP address to bind
-var AxiomaticIP = getenv("AXIOMATIC_IP", "127.0.0.1")
-
-// AxiomaticPort is the port number to bind
-var AxiomaticPort = getenv("AXIOMATIC_PORT", "8181")
-
-// ConsulKeyPrefix is the path prefix to prepend to all consul keys
-var ConsulKeyPrefix = getenv("D2C_CONSUL_KEY_PREFIX", "")
-
-// ConsulServerURL is the URL of the Consul server kv store
-var ConsulServerURL = getenv("D2C_CONSUL_SERVER", "http://localhost:8500/v1/kv")
-
-// GithubWebhookSecret is the secret token for validating webhook requests
-var GithubWebhookSecret = getenv("GITHUB_SECRET", "")
-
-// VaultToken is the token used to access the Nomad server
-var VaultToken = getenv("VAULT_TOKEN", "")
 
 var jobTemplate *template.Template
 
 // NomadJobData contains data for job template rendering
 type NomadJobData struct {
-	ConsulKeyPrefix string
-	ConsulServerURL string
-	GitRepoName     string
-	GitRepoURL      string
-	HeadSHA         string
-	VaultToken      string
+	GitRepoName string
+	GitRepoURL  string
+	HeadSHA     string
+	SshKey      string
+	Environment []string
 }
 
 func main() {
-	log.Println("Axiomatic Server Starting")
-	if GithubWebhookSecret == "" {
-		log.Fatal("You must configure GITHUB_SECRET! Axiomatic shutting down.")
+	setupEnvironment()
+	if isMissingConfiguration() {
+		log.Fatal("Shutting down.")
 	}
-	log.Println("AXIOMATIC_IP:", AxiomaticIP)
-	log.Println("AXIOMATIC_PORT:", AxiomaticPort)
-
-	env := os.Environ()
-	sort.Strings(env)
-	log.Printf("\nEnvironment\n\t%s", strings.Join(env, "\n\t"))
+	fmt.Println(startupMessage())
 
 	jobTemplate = template.Must(template.New("job").Parse(templateNomadJob()))
 
 	http.HandleFunc("/health", handleHealth)
+	http.HandleFunc("/publickey", handlePublicKey)
 	http.HandleFunc("/webhook", handleWebhook)
 
-	serverAddr := strings.Join([]string{AxiomaticIP, AxiomaticPort}, ":")
-	log.Fatal(http.ListenAndServe(serverAddr, nil))
+	log.Fatal(http.ListenAndServe(viper.GetString("IP")+":"+viper.GetString("PORT"), nil))
 	return
 }
 
-// getenv returns the environment value for the given key or the default value when not found
-func getenv(key string, _default string) string {
-	val, ok := os.LookupEnv(key)
-	if !ok {
-		return _default
+// filterEnvironment returns a slice of strings from ss that begin with "CONSUL_" or "D2C_"
+func filterEnvironment(ss []string) []string {
+	r := []string{}
+	for _, s := range ss {
+		if strings.HasPrefix(s, "CONSUL_") || strings.HasPrefix(s, "D2C_") {
+			r = append(r, s)
+		}
 	}
-	return val
+	return r
+}
+
+func setupEnvironment() {
+	viper.SetEnvPrefix("AXIOMATIC")
+	viper.SetDefault("GITHUB_SECRET", "")
+	viper.SetDefault("IP", "127.0.0.1")
+	viper.SetDefault("PORT", "8181")
+	viper.SetDefault("SSH_PRIV_KEY", "")
+	viper.SetDefault("SSH_PUB_KEY", "")
+	viper.AutomaticEnv()
+	viper.BindEnv("GITHUB_SECRET")
+	viper.BindEnv("IP")
+	viper.BindEnv("PORT")
+	viper.BindEnv("SSH_PRIV_KEY")
+	viper.BindEnv("SSH_PUB_KEY")
+}
+
+func isMissingConfiguration() bool {
+	r := false
+	vs := []string{"GITHUB_SECRET", "SSH_PRIV_KEY", "SSH_PUB_KEY"}
+	for _, v := range vs {
+		if viper.GetString(v) == "" {
+			log.Printf("You must configure AXIOMATIC_%s!", v)
+			r = true
+		}
+	}
+	return r
+}
+
+func startupMessage() string {
+	banner := "\n------------\n Axiomatic \n------------\n"
+
+	config := fmt.Sprintf("Configuration\n\tAXIOMATIC_IP: %s\n\tAXIOMATIC_PORT: %s", viper.GetString("IP"), viper.GetString("PORT"))
+
+	env := os.Environ()
+	sort.Strings(env)
+	environment := fmt.Sprintf("\nEnvironment\n\t%s", strings.Join(env, "\n\t"))
+
+	return banner + config + environment
 }
 
 func handleHealth(w http.ResponseWriter, r *http.Request) {
@@ -86,9 +101,15 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func handlePublicKey(w http.ResponseWriter, r *http.Request) {
+	log.Println("Public Key Request")
+	fmt.Fprintf(w, viper.GetString("SSH_PUB_KEY"))
+	return
+}
+
 func handleWebhook(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	payload, err := github.ValidatePayload(r, []byte(GithubWebhookSecret))
+	payload, err := github.ValidatePayload(r, []byte(viper.GetString("GITHUB_SECRET")))
 	if err != nil {
 		log.Printf("error validating request body: err=%s\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -107,15 +128,12 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 		log.Println("GitHub Pinged the Webhook")
 	case *github.PushEvent:
 		jobArgs := NomadJobData{
-			ConsulKeyPrefix: ConsulKeyPrefix,
-			ConsulServerURL: ConsulServerURL,
-			GitRepoName:     e.Repo.GetName(),
-			GitRepoURL:      e.Repo.GetCloneURL(),
-			HeadSHA:         e.GetAfter(),
+			GitRepoName: e.Repo.GetName(),
+			GitRepoURL:  e.Repo.GetSSHURL(),
+			HeadSHA:     e.GetAfter(),
+			SshKey:      viper.GetString("SSH_PRIV_KEY"),
+			Environment: filterEnvironment(os.Environ()),
 			VaultToken:      VaultToken,
-		}
-		if debug {
-			log.Printf("jobArgs: %+v\n", jobArgs)
 		}
 
 		job, err := templateToJob(jobArgs)
@@ -181,7 +199,7 @@ func submitNomadJob(job *api.Job) error {
 	return nil
 }
 
-// templateNomadJob returns a templated,json formatted, Nomad job definition as a string
+// templateNomadJob returns a Nomad job definition as a string
 func templateNomadJob() string {
 	const jobTemplate = `
 job "dir2consul-{{ .GitRepoName }}" {
@@ -191,7 +209,10 @@ job "dir2consul-{{ .GitRepoName }}" {
         task "dir2consul" {
             artifact {
                 destination = "local/{{ .GitRepoName }}"
-                source = "git::{{ .GitRepoURL }}"
+                source = "{{ .GitRepoURL }}"
+                options {
+                    sshkey = "{{ .SshKey }}"
+                }
             }
             config {
                 image = "jimrazmus/dir2consul:rc"
@@ -199,10 +220,10 @@ job "dir2consul-{{ .GitRepoName }}" {
             driver = "docker"
             env {
                 D2C_CONSUL_KEY_PREFIX = "services/{{ .GitRepoName }}/config"
-                D2C_CONSUL_SERVER = "{{ .ConsulServerURL }}"
                 D2C_DIRECTORY = "/local/{{ .GitRepoName }}"
-                D2C_DEFAULT_CONFIG_TYPE="properties"
-                D2C_VERBOSE = true
+			{{ range .Environment}}
+				{{.}}
+			{{ end }}
             }
             meta {
                 commit-SHA = "{{ .HeadSHA }}"

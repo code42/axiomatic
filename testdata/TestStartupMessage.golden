@@ -1,0 +1,9 @@
+
+------------
+ Axiomatic 
+------------
+Configuration
+	AXIOMATIC_IP: 127.0.0.1
+	AXIOMATIC_PORT: 8181
+Environment
+	TEST=TestStartupMessage
