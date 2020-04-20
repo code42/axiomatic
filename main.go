@@ -35,7 +35,11 @@ func main() {
 	}
 	fmt.Println(startupMessage())
 
+	log.Println("Processing dir2consul job template")
+	
 	jobTemplate = template.Must(template.New("job").Parse(templateNomadJob()))
+
+	log.Println("Finished processing dir2consul job template")
 
 	http.HandleFunc("/health", handleHealth)
 	http.HandleFunc("/publickey", handlePublicKey)
@@ -218,6 +222,7 @@ job "dir2consul-{{ .GitRepoName }}" {
             }
             driver = "docker"
             env {
+                D2C_VERBOSE = true
                 D2C_CONSUL_KEY_PREFIX = "services/{{ .GitRepoName }}/config"
                 D2C_DIRECTORY = "/local/{{ .GitRepoName }}"
 			{{ range .Environment}}
