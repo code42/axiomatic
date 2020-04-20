@@ -57,6 +57,14 @@ func filterEnvironment(ss []string) []string {
 			r = append(r, s)
 		}
 	}
+
+	for idx, x := range r {
+		xs := strings.Split(x, "=")
+
+		xs[1] = "\"" + xs[1] + "\""
+		r[idx] = strings.Join(xs, " = ")
+	}
+	
 	return r
 }
 
@@ -133,8 +141,8 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 	case *github.PushEvent:
 		jobArgs := NomadJobData{
 			GitRepoName: e.Repo.GetName(),
-			//			GitRepoURL:  e.Repo.GetSSHURL(),
-			GitRepoURL:  e.Repo.GetURL(),
+			GitRepoURL:  e.Repo.GetSSHURL(),
+			//			GitRepoURL:  e.Repo.GetURL(),
 			HeadSHA:     e.GetAfter(),
 			SshKey:      viper.GetString("SSH_PRIV_KEY"),
 			Environment: filterEnvironment(os.Environ()),
@@ -215,7 +223,7 @@ job "dir2consul-{{ .GitRepoName }}" {
         task "dir2consul" {
             artifact {
                 destination = "local/{{ .GitRepoName }}"
-                source = "git::{{ .GitRepoURL }}"
+                source = "{{ .GitRepoURL }}"
                 options {
                     sshkey = "{{ .SshKey }}"
                 }
