@@ -178,13 +178,15 @@ func templateToJob(jobArgs NomadJobData) (*api.Job, error) {
 	if err != nil {
 		log.Println("Failed to parse jobTemplate")
 		return nil, err
+	} else {
+		fmt.Println(buf.String())
 	}
-
+	
 	// create a Nomad job struct by parsing data from the io pipe
 	var job *api.Job
 	job, err = jobspec.Parse(&buf)
 	if err != nil {
-		log.Println("Failed to convert to Nomad Job\n", &buf)
+		log.Println("Failed to convert to Nomad Job")
 		return nil, err
 	}
 
