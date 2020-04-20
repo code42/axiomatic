@@ -133,7 +133,6 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 			HeadSHA:     e.GetAfter(),
 			SshKey:      viper.GetString("SSH_PRIV_KEY"),
 			Environment: filterEnvironment(os.Environ()),
-			VaultToken:      VaultToken,
 		}
 
 		job, err := templateToJob(jobArgs)
@@ -209,7 +208,7 @@ job "dir2consul-{{ .GitRepoName }}" {
         task "dir2consul" {
             artifact {
                 destination = "local/{{ .GitRepoName }}"
-                source = "{{ .GitRepoURL }}"
+                source = "git::{{ .GitRepoURL }}"
                 options {
                     sshkey = "{{ .SshKey }}"
                 }
