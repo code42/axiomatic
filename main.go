@@ -61,7 +61,7 @@ func filterEnvironment(ss []string) []string {
 	for idx, x := range r {
 		xs := strings.Split(x, "=")
 
-		xs[1] = "\"" + xs[1] + "\""
+		xs[1] = fmt.Sprintf("\"%s\"", xs[1])
 		r[idx] = strings.Join(xs, " = ")
 	}
 	
@@ -240,9 +240,9 @@ job "dir2consul-{{ .GitRepoName }}" {
                 D2C_VERBOSE = true
                 D2C_CONSUL_KEY_PREFIX = "services/{{ .GitRepoName }}/config"
                 D2C_DIRECTORY = "/local/{{ .GitRepoName }}"
-			{{ range .Environment}}
+			{{- range .Environment}}
 				{{.}}
-			{{ end }}
+			{{ end -}}
             }
             meta {
                 commit-SHA = "{{ .HeadSHA }}"
