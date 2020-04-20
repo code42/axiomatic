@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"html/template"
+	"text/template"
 	"log"
 	"net/http"
 	"os"
@@ -241,8 +241,8 @@ job "dir2consul-{{ .GitRepoName }}" {
                 D2C_CONSUL_KEY_PREFIX = "services/{{ .GitRepoName }}/config"
                 D2C_DIRECTORY = "/local/{{ .GitRepoName }}"
 			{{- range .Environment}}
-				{{.}}
-			{{ end -}}
+				{{ . -}}
+			{{- end -}}
             }
             meta {
                 commit-SHA = "{{ .HeadSHA }}"
