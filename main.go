@@ -184,7 +184,7 @@ func templateToJob(jobArgs NomadJobData) (*api.Job, error) {
 	var job *api.Job
 	job, err = jobspec.Parse(&buf)
 	if err != nil {
-		log.Println("Failed to convert to Nomad Job")
+		log.Println("Failed to convert to Nomad Job\n", &buf)
 		return nil, err
 	}
 
