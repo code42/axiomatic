@@ -141,8 +141,8 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 	case *github.PushEvent:
 		jobArgs := NomadJobData{
 			GitRepoName: e.Repo.GetName(),
-			GitRepoURL:  e.Repo.GetSSHURL(),
-			//			GitRepoURL:  e.Repo.GetURL(),
+			// GitRepoURL:  e.Repo.GetSSHURL(),
+			GitRepoURL:  e.Repo.GetURL(),
 			HeadSHA:     e.GetAfter(),
 			SshKey:      viper.GetString("SSH_PRIV_KEY"),
 			Environment: filterEnvironment(os.Environ()),
