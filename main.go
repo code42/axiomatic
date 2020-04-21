@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"html/template"
+	"text/template"
 	"log"
 	"net/http"
 	"os"
@@ -35,7 +35,11 @@ func main() {
 	}
 	fmt.Println(startupMessage())
 
+	log.Println("Processing dir2consul job template")
+	
 	jobTemplate = template.Must(template.New("job").Parse(templateNomadJob()))
+
+	log.Println("Finished processing dir2consul job template")
 
 	http.HandleFunc("/health", handleHealth)
 	http.HandleFunc("/publickey", handlePublicKey)
@@ -53,6 +57,14 @@ func filterEnvironment(ss []string) []string {
 			r = append(r, s)
 		}
 	}
+
+	for idx, x := range r {
+		xs := strings.Split(x, "=")
+
+		xs[1] = fmt.Sprintf("\"%s\"", xs[1])
+		r[idx] = strings.Join(xs, " = ")
+	}
+	
 	return r
 }
 
@@ -128,13 +140,16 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 		log.Println("GitHub Pinged the Webhook")
 	case *github.PushEvent:
 		jobArgs := NomadJobData{
-			GitRepoName: e.Repo.GetFullName(),
-			GitRepoURL:  e.Repo.GetSSHURL(),
+			GitRepoName: e.Repo.GetName(),
+			// GitRepoURL:  e.Repo.GetSSHURL(),
+			GitRepoURL:  e.Repo.GetURL(),
 			HeadSHA:     e.GetAfter(),
 			SshKey:      viper.GetString("SSH_PRIV_KEY"),
 			Environment: filterEnvironment(os.Environ()),
 		}
 
+		fmt.Println(jobArgs)
+		
 		job, err := templateToJob(jobArgs)
 		if err != nil {
 			log.Println("template to job failed:", err)
@@ -161,13 +176,17 @@ func templateToJob(jobArgs NomadJobData) (*api.Job, error) {
 	// execute template with given data and output to io pipe
 	err := jobTemplate.Execute(&buf, jobArgs)
 	if err != nil {
+		log.Println("Failed to parse jobTemplate")
 		return nil, err
+	} else {
+		fmt.Println(buf.String())
 	}
-
+	
 	// create a Nomad job struct by parsing data from the io pipe
 	var job *api.Job
 	job, err = jobspec.Parse(&buf)
 	if err != nil {
+		log.Println("Failed to convert to Nomad Job")
 		return nil, err
 	}
 
@@ -208,28 +227,39 @@ job "dir2consul-{{ .GitRepoName }}" {
         task "dir2consul" {
             artifact {
                 destination = "local/{{ .GitRepoName }}"
-				source = "{{ .GitRepoURL }}"
+                source = "git::{{ .GitRepoURL }}"
                 options {
                     sshkey = "{{ .SshKey }}"
                 }
             }
             config {
-                image = "jimrazmus/dir2consul:v1.4.1"
+                image = "jimrazmus/dir2consul:rc"
             }
             driver = "docker"
             env {
+                D2C_VERBOSE = true
                 D2C_CONSUL_KEY_PREFIX = "services/{{ .GitRepoName }}/config"
-                D2C_DIRECTORY = "local/{{ .GitRepoName }}"
-			{{ range .Environment}}
-				{{.}}
-			{{ end }}
+                D2C_DIRECTORY = "/local/{{ .GitRepoName }}"
+			{{- range .Environment}}
+				{{ . -}}
+			{{- end -}}
             }
             meta {
                 commit-SHA = "{{ .HeadSHA }}"
             }
             vault = {
-                policies = ["consul-{{ .GitRepoName }}-write"]
+                policies = [ "consul-{{ .GitRepoName }}-write" ]
             }
+            template {
+
+                data = "CONSUL_HTTP_TOKEN={_ with secret \"config/creds/{{ .GitRepoName }}-role\" _}{_ .Data.token _}{_ end _}"
+
+                left_delimiter = "{_"
+                right_delimiter = "_}"
+                destination = "secrets/{{ .GitRepoName }}-token.env"
+                env = true
+            }
+
         }
     }
     type = "batch"
@@ -237,3 +267,13 @@ job "dir2consul-{{ .GitRepoName }}" {
 `
 	return jobTemplate
 }
+
+// Emacs formatting variables
+
+// Local Variables:
+// mode: go
+// tab-width: 8
+// indent-tabs-mode: t
+// standard-indent: 8
+// End:
+ 
