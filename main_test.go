@@ -61,7 +61,7 @@ func TestTemplateToJob(t *testing.T) {
 			GitRepoName: a,
 			GitRepoURL:  b,
 			HeadSHA:     c,
-			SshKey:      d,
+			SSHKey:      d,
 			Environment: []string{"CONSUL_TEST=1"},
 		}
 		_, err := templateToJob(jobArgs)
