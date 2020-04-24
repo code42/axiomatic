@@ -37,8 +37,6 @@ func main() {
 
 	jobTemplate = template.Must(template.New("job").Parse(templateNomadJob()))
 
-	log.Println("Finished processing dir2consul job template")
-
 	http.HandleFunc("/health", handleHealth)
 	http.HandleFunc("/publickey", handlePublicKey)
 	http.HandleFunc("/webhook", handleWebhook)
