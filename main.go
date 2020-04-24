@@ -24,7 +24,7 @@ type NomadJobData struct {
 	GitRepoName string
 	GitRepoURL  string
 	HeadSHA     string
-	SshKey      string
+	SSHKey      string
 	Environment []string
 }
 
@@ -131,7 +131,7 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 			GitRepoName: e.Repo.GetFullName(),
 			GitRepoURL:  e.Repo.GetSSHURL(),
 			HeadSHA:     e.GetAfter(),
-			SshKey:      viper.GetString("SSH_PRIV_KEY"),
+			SSHKey:      viper.GetString("SSH_PRIV_KEY"),
 			Environment: filterEnvironment(os.Environ()),
 		}
 
@@ -210,7 +210,7 @@ job "dir2consul-{{ .GitRepoName }}" {
                 destination = "local/{{ .GitRepoName }}"
 				source = "{{ .GitRepoURL }}"
                 options {
-                    sshkey = "{{ .SshKey }}"
+                    sshkey = "{{ .SSHKey }}"
                 }
             }
             config {
