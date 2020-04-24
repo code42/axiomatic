@@ -143,8 +143,6 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 			Environment: filterEnvironment(os.Environ()),
 		}
 
-		fmt.Println(jobArgs)
-		
 		job, err := templateToJob(jobArgs)
 		if err != nil {
 			log.Println("template to job failed:", err)
