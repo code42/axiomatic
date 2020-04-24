@@ -25,7 +25,8 @@ type NomadJobData struct {
 	GitRepoURL  string
 	HeadSHA     string
 	SshKey      string
-	Environment []string
+	//	Environment []string
+	Environment map[string]string
 }
 
 func main() {
@@ -139,13 +140,24 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 	case *github.PingEvent:
 		log.Println("GitHub Pinged the Webhook")
 	case *github.PushEvent:
+		enviroStrings := os.Environ()
+		enviroMap := map[string]string
+		
+		range _, e := enviroStrings {
+			{key, value} := strings.Split(e, "=")
+
+			if strings.HasPrefix(key, "CONSUL_") || strings.HasPrefix(key, "D2C_") {
+				enviroMap[key] = value
+			}
+		}
+		
 		jobArgs := NomadJobData{
 			GitRepoName: e.Repo.GetName(),
 			// GitRepoURL:  e.Repo.GetSSHURL(),
 			GitRepoURL:  e.Repo.GetURL(),
 			HeadSHA:     e.GetAfter(),
 			SshKey:      viper.GetString("SSH_PRIV_KEY"),
-			Environment: filterEnvironment(os.Environ()),
+			Environment: enviroMap,
 		}
 
 		fmt.Println(jobArgs)
@@ -240,9 +252,9 @@ job "dir2consul-{{ .GitRepoName }}" {
                 D2C_VERBOSE = true
                 D2C_CONSUL_KEY_PREFIX = "services/{{ .GitRepoName }}/config"
                 D2C_DIRECTORY = "/local/{{ .GitRepoName }}"
-			{{- range .Environment}}
-				{{ . -}}
-			{{- end -}}
+            {{- range $key, $val := .Environment }}
+                {{ $key }} = "{{ $val }}"
+            {{- end }}
             }
             meta {
                 commit-SHA = "{{ .HeadSHA }}"
