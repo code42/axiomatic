@@ -169,7 +169,6 @@ func templateToJob(jobArgs NomadJobData) (*api.Job, error) {
 	// execute template with given data and output to io pipe
 	err := jobTemplate.Execute(&buf, jobArgs)
 	if err != nil {
-		log.Println("Failed to parse jobTemplate")
 		return nil, err
 	} else {
 		fmt.Println(buf.String())
