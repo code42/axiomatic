@@ -188,8 +188,7 @@ func templateToJob(jobArgs NomadJobData) (*api.Job, error) {
 	err := jobTemplate.Execute(&buf, jobArgs)
 	if err != nil {
 		return nil, err
-	} else {
-		fmt.Println(buf.String())
+	}
 	}
 
 	// create a Nomad job struct by parsing data from the io pipe
