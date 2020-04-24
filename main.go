@@ -258,13 +258,4 @@ job "dir2consul-{{ .GitRepoName }}" {
 `
 	return jobTemplate
 }
-
-// Emacs formatting variables
-
-// Local Variables:
-// mode: go
-// tab-width: 8
-// indent-tabs-mode: t
-// standard-indent: 8
-// End:
  
