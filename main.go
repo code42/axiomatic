@@ -53,14 +53,6 @@ func filterEnvironment(ss []string) []string {
 			r = append(r, s)
 		}
 	}
-
-	for idx, x := range r {
-		xs := strings.Split(x, "=")
-
-		xs[1] = fmt.Sprintf("\"%s\"", xs[1])
-		r[idx] = strings.Join(xs, " = ")
-	}
-
 	return r
 }
 
@@ -188,7 +180,6 @@ func templateToJob(jobArgs NomadJobData) (*api.Job, error) {
 	err := jobTemplate.Execute(&buf, jobArgs)
 	if err != nil {
 		return nil, err
-	}
 	}
 
 	// create a Nomad job struct by parsing data from the io pipe
