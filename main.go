@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"text/template"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -25,7 +25,6 @@ type NomadJobData struct {
 	GitRepoURL  string
 	HeadSHA     string
 	SshKey      string
-	//	Environment []string
 	Environment map[string]string
 }
 
@@ -61,7 +60,7 @@ func filterEnvironment(ss []string) []string {
 		xs[1] = fmt.Sprintf("\"%s\"", xs[1])
 		r[idx] = strings.Join(xs, " = ")
 	}
-	
+
 	return r
 }
 
@@ -137,16 +136,23 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 		log.Println("GitHub Pinged the Webhook")
 	case *github.PushEvent:
 		enviroStrings := os.Environ()
-		enviroMap := map[string]string
-		
-		range _, e := enviroStrings {
-			{key, value} := strings.Split(e, "=")
+		var enviroMap map[string]string
+
+		for _, estring := range enviroStrings {
+			estringSplit := strings.Split(estring, "=")
+
+			if len(estringSplit) != 2 {
+				log.Printf("error parsing environment variable... %s", estring)
+			}
+
+			key := estringSplit[0]
+			value := estringSplit[1]
 
 			if strings.HasPrefix(key, "CONSUL_") || strings.HasPrefix(key, "D2C_") {
 				enviroMap[key] = value
 			}
 		}
-		
+
 		jobArgs := NomadJobData{
 			GitRepoName: e.Repo.GetName(),
 			GitRepoURL:  e.Repo.GetURL(),
@@ -185,7 +191,7 @@ func templateToJob(jobArgs NomadJobData) (*api.Job, error) {
 	} else {
 		fmt.Println(buf.String())
 	}
-	
+
 	// create a Nomad job struct by parsing data from the io pipe
 	var job *api.Job
 	job, err = jobspec.Parse(&buf)
@@ -270,4 +276,3 @@ job "dir2consul-{{ .GitRepoName }}" {
 `
 	return jobTemplate
 }
- 
