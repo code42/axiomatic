@@ -35,8 +35,6 @@ func main() {
 	}
 	fmt.Println(startupMessage())
 
-	log.Println("Processing dir2consul job template")
-	
 	jobTemplate = template.Must(template.New("job").Parse(templateNomadJob()))
 
 	log.Println("Finished processing dir2consul job template")
