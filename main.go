@@ -229,7 +229,6 @@ job "dir2consul-{{ .GitRepoName }}" {
             }
             driver = "docker"
             env {
-                D2C_VERBOSE = true
                 D2C_CONSUL_KEY_PREFIX = "services/{{ .GitRepoName }}/config"
                 D2C_DIRECTORY = "/local/{{ .GitRepoName }}"
 			{{- range .Environment}}
