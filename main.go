@@ -36,11 +36,7 @@ func main() {
 	}
 	fmt.Println(startupMessage())
 
-	log.Println("Processing dir2consul job template")
-	
 	jobTemplate = template.Must(template.New("job").Parse(templateNomadJob()))
-
-	log.Println("Finished processing dir2consul job template")
 
 	http.HandleFunc("/health", handleHealth)
 	http.HandleFunc("/publickey", handlePublicKey)
@@ -153,15 +149,12 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 		
 		jobArgs := NomadJobData{
 			GitRepoName: e.Repo.GetName(),
-			// GitRepoURL:  e.Repo.GetSSHURL(),
 			GitRepoURL:  e.Repo.GetURL(),
 			HeadSHA:     e.GetAfter(),
 			SshKey:      viper.GetString("SSH_PRIV_KEY"),
 			Environment: enviroMap,
 		}
 
-		fmt.Println(jobArgs)
-		
 		job, err := templateToJob(jobArgs)
 		if err != nil {
 			log.Println("template to job failed:", err)
@@ -188,7 +181,6 @@ func templateToJob(jobArgs NomadJobData) (*api.Job, error) {
 	// execute template with given data and output to io pipe
 	err := jobTemplate.Execute(&buf, jobArgs)
 	if err != nil {
-		log.Println("Failed to parse jobTemplate")
 		return nil, err
 	} else {
 		fmt.Println(buf.String())
@@ -245,11 +237,10 @@ job "dir2consul-{{ .GitRepoName }}" {
                 }
             }
             config {
-                image = "jimrazmus/dir2consul:rc"
+                image = "code42software/dir2consul:v1.5.0"
             }
             driver = "docker"
             env {
-                D2C_VERBOSE = true
                 D2C_CONSUL_KEY_PREFIX = "services/{{ .GitRepoName }}/config"
                 D2C_DIRECTORY = "/local/{{ .GitRepoName }}"
             {{- range $key, $val := .Environment }}
@@ -279,13 +270,4 @@ job "dir2consul-{{ .GitRepoName }}" {
 `
 	return jobTemplate
 }
-
-// Emacs formatting variables
-
-// Local Variables:
-// mode: go
-// tab-width: 8
-// indent-tabs-mode: t
-// standard-indent: 8
-// End:
  
