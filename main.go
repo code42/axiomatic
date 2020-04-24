@@ -225,7 +225,7 @@ job "dir2consul-{{ .GitRepoName }}" {
                 }
             }
             config {
-                image = "jimrazmus/dir2consul:rc"
+                image = "code42software/dir2consul:v1.5.0"
             }
             driver = "docker"
             env {
