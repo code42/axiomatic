@@ -2,6 +2,15 @@
 ## [Unreleased]
 
 
+<a name="v1.0.1"></a>
+## [v1.0.1] - 2020-04-27
+### Chore
+- add container labels
+
+### Pull Requests
+- Merge pull request [#21](https://github.com/code42/axiomatic/issues/21) from code42/label-container
+
+
 <a name="v1.0.0"></a>
 ## [v1.0.0] - 2020-04-27
 ### Build
@@ -15,6 +24,7 @@
 - **deps:** bump github.com/spf13/viper from 1.6.2 to 1.6.3
 
 ### Chore
+- release new version
 - update and tidy go modules
 - go mod tidy
 - update both codecov URLs
@@ -88,5 +98,6 @@
 <a name="0.10.0"></a>
 ## 0.10.0 - 2020-02-18
 
-[Unreleased]: https://github.com/code42/axiomatic/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/code42/axiomatic/compare/v1.0.1...HEAD
+[v1.0.1]: https://github.com/code42/axiomatic/compare/v1.0.0...v1.0.1
 [v1.0.0]: https://github.com/code42/axiomatic/compare/0.10.0...v1.0.0
