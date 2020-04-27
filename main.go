@@ -45,15 +45,23 @@ func main() {
 	return
 }
 
-// filterEnvironment returns a slice of strings from ss that begin with "CONSUL_" or "D2C_"
-func filterEnvironment(ss []string) []string {
-	r := []string{}
+// filterEnvironment returns a map of strings from ss that begin with "CONSUL_" or "D2C_"
+func filterEnvironment(ss []string) (map[string]string, error) {
+	r := make(map[string]string)
+
 	for _, s := range ss {
 		if strings.HasPrefix(s, "CONSUL_") || strings.HasPrefix(s, "D2C_") {
-			r = append(r, s)
+			kv := strings.Split(s, "=")
+
+			if len(kv) != 2 {
+				return nil, fmt.Errorf("Error parsing environment variable: '%s'", s)
+			}
+
+			r[kv[0]] = kv[1]
 		}
 	}
-	return r
+
+	return r, nil
 }
 
 func setupEnvironment() {
@@ -151,22 +159,10 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 	case *github.PingEvent:
 		log.Println("GitHub Pinged the Webhook")
 	case *github.PushEvent:
-		enviroStrings := os.Environ()
-		var enviroMap map[string]string
-
-		for _, estring := range enviroStrings {
-			estringSplit := strings.Split(estring, "=")
-
-			if len(estringSplit) != 2 {
-				log.Printf("error parsing environment variable... %s", estring)
-			}
-
-			key := estringSplit[0]
-			value := estringSplit[1]
-
-			if strings.HasPrefix(key, "CONSUL_") || strings.HasPrefix(key, "D2C_") {
-				enviroMap[key] = value
-			}
+		env, err := filterEnvironment(os.Environ())
+		if err != nil {
+			log.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
 		jobArgs := NomadJobData{
@@ -174,7 +170,7 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 			GitRepoURL:  e.Repo.GetURL(),
 			HeadSHA:     e.GetAfter(),
 			SSHKey:      viper.GetString("SSH_PRIV_KEY"),
-			Environment: enviroMap,
+			Environment: env,
 		}
 
 		job, err := templateToJob(jobArgs)

@@ -79,54 +79,75 @@ func TestTemplateToJob(t *testing.T) {
 	}
 }
 
-func TestFilterEnvironment(t *testing.T) {
+func TestFilterEnvironmentSucceeds(t *testing.T) {
 	cases := []struct {
 		name string
 		ss   []string
-		rs   []string
+		rs   map[string]string
 	}{
 		{
 			"One Element Match",
 			[]string{"CONSUL_A=a"},
-			[]string{"CONSUL_A=a"},
+			map[string]string{"CONSUL_A": "a"},
 		},
 		{
 			"Two Element Match",
 			[]string{"CONSUL_A=a", "CONSUL_b=b"},
-			[]string{"CONSUL_A=a", "CONSUL_b=b"},
+			map[string]string{"CONSUL_A": "a", "CONSUL_b": "b"},
 		},
 		{
 			"Leading Element Match",
 			[]string{"CONSUL_1=1", "a=a", "b=b"},
-			[]string{"CONSUL_1=1"},
+			map[string]string{"CONSUL_1": "1"},
 		},
 		{
 			"Nested Element Match",
 			[]string{"a=a", "CONSUL_1=1", "b=b"},
-			[]string{"CONSUL_1=1"},
+			map[string]string{"CONSUL_1": "1"},
 		},
 		{
 			"Trailing Element Match",
 			[]string{"a=a", "b=b", "CONSUL_1=1"},
-			[]string{"CONSUL_1=1"},
+			map[string]string{"CONSUL_1": "1"},
 		},
 		{
 			"No Element Match",
 			[]string{"a=a", "b=b", "CONSULA_A=a"},
-			[]string{},
+			map[string]string{},
 		},
 		{
 			"One d2c Element Match",
 			[]string{"a=a", "b=b", "D2C_A=a"},
-			[]string{"D2C_A=a"},
+			map[string]string{"D2C_A": "a"},
 		},
 	}
 
 	for i, tc := range cases {
 		t.Run(fmt.Sprintf("%d_%s", i, tc.name), func(t *testing.T) {
-			got := filterEnvironment(tc.ss)
+			got, _ := filterEnvironment(tc.ss)
 			if !reflect.DeepEqual(got, tc.rs) {
 				t.Errorf("got (%+v) want (%+v)", got, tc.rs)
+			}
+		})
+	}
+}
+
+func TestFilterEnvironmentErrors(t *testing.T) {
+	cases := []struct {
+		name string
+		ss   []string
+	}{
+		{
+			"Two equals errors",
+			[]string{"CONSUL_A=a=c"},
+		},
+	}
+
+	for i, tc := range cases {
+		t.Run(fmt.Sprintf("%d_%s", i, tc.name), func(t *testing.T) {
+			_, err := filterEnvironment(tc.ss)
+			if err == nil {
+				t.Error("expected an error")
 			}
 		})
 	}
