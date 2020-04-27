@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"sort"
 	"strings"
+	"text/template"
 
 	"github.com/google/go-github/github"
 	"github.com/hashicorp/nomad/api"

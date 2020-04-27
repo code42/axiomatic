@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"html/template"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -12,6 +11,7 @@ import (
 	"reflect"
 	"testing"
 	"testing/quick"
+	"text/template"
 
 	"github.com/spf13/viper"
 )
