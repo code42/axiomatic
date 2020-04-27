@@ -37,7 +37,10 @@ func TestHandleHealth(t *testing.T) {
 
 func TestPublicKey(t *testing.T) {
 	answer := "an ssh public key"
-	os.Setenv("AXIOMATIC_SSH_PUB_KEY", answer)
+	err := os.Setenv("AXIOMATIC_SSH_PUB_KEY", answer)
+	if err != nil {
+		t.Fatal(err)
+	}
 	setupEnvironment()
 	req, err := http.NewRequest("GET", "/publickey", nil)
 	if err != nil {
@@ -154,9 +157,19 @@ func TestIsMissingConfiguration(t *testing.T) {
 	if isMissingConfiguration() != true {
 		t.Error("expected: (true) got: (false)")
 	}
-	os.Setenv("AXIOMATIC_GITHUB_SECRET", "testing")
-	os.Setenv("AXIOMATIC_SSH_PRIV_KEY", "testing")
-	os.Setenv("AXIOMATIC_SSH_PUB_KEY", "testing")
+	err := os.Setenv("AXIOMATIC_GITHUB_SECRET", "testing")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.Setenv("AXIOMATIC_SSH_PRIV_KEY", "testing")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.Setenv("AXIOMATIC_SSH_PUB_KEY", "testing")
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if isMissingConfiguration() != false {
 		t.Error("expected: (false) got: (true)")
 	}
@@ -164,11 +177,17 @@ func TestIsMissingConfiguration(t *testing.T) {
 
 func TestStartupMessage(t *testing.T) {
 	os.Clearenv()
-	os.Setenv("TEST", "TestStartupMessage")
+	err := os.Setenv("TEST", "TestStartupMessage")
+	if err != nil {
+		t.Fatal(err)
+	}
 	actual := []byte(startupMessage())
 	auFile := "testdata/TestStartupMessage.golden"
 	if *update {
-		ioutil.WriteFile(auFile, actual, 0644)
+		err = ioutil.WriteFile(auFile, actual, 0644)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 	golden, err := ioutil.ReadFile(auFile)
 	if err != nil {

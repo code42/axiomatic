@@ -57,18 +57,28 @@ func filterEnvironment(ss []string) []string {
 }
 
 func setupEnvironment() {
+	envDefaults := map[string]string{
+		"GITHUB_SECRET": "",
+		"IP":            "127.0.0.1",
+		"PORT":          "8181",
+		"SSH_PRIV_KEY":  "",
+		"SSH_PUB_KEY":   "",
+	}
+
 	viper.SetEnvPrefix("AXIOMATIC")
-	viper.SetDefault("GITHUB_SECRET", "")
-	viper.SetDefault("IP", "127.0.0.1")
-	viper.SetDefault("PORT", "8181")
-	viper.SetDefault("SSH_PRIV_KEY", "")
-	viper.SetDefault("SSH_PUB_KEY", "")
+
+	for key, val := range envDefaults {
+		viper.SetDefault(key, val)
+	}
+
 	viper.AutomaticEnv()
-	viper.BindEnv("GITHUB_SECRET")
-	viper.BindEnv("IP")
-	viper.BindEnv("PORT")
-	viper.BindEnv("SSH_PRIV_KEY")
-	viper.BindEnv("SSH_PUB_KEY")
+
+	for key := range envDefaults {
+		err := viper.BindEnv(key)
+		if err != nil {
+			log.Fatalf("Error setting up environment: %s", err)
+		}
+	}
 }
 
 func isMissingConfiguration() bool {
@@ -96,19 +106,33 @@ func startupMessage() string {
 }
 
 func handleHealth(w http.ResponseWriter, r *http.Request) {
-	log.Println("Good to Serve")
-	fmt.Fprintf(w, "Good to Serve")
+	_, err := fmt.Fprintf(w, "Good to Serve")
+	if err != nil {
+		log.Println(err)
+	} else {
+		log.Println("Good to Serve")
+	}
 	return
 }
 
 func handlePublicKey(w http.ResponseWriter, r *http.Request) {
-	log.Println("Public Key Request")
-	fmt.Fprintf(w, viper.GetString("SSH_PUB_KEY"))
+	_, err := fmt.Fprintf(w, viper.GetString("SSH_PUB_KEY"))
+	if err != nil {
+		log.Println(err)
+	} else {
+		log.Println("Public Key Request")
+	}
 	return
 }
 
 func handleWebhook(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			log.Printf("Error closing body: %s", err)
+		}
+	}()
+
 	payload, err := github.ValidatePayload(r, []byte(viper.GetString("GITHUB_SECRET")))
 	if err != nil {
 		log.Printf("error validating request body: err=%s\n", err)
