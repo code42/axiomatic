@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"sort"
 	"strings"
+	"text/template"
 
 	"github.com/google/go-github/github"
 	"github.com/hashicorp/nomad/api"
@@ -24,8 +24,8 @@ type NomadJobData struct {
 	GitRepoName string
 	GitRepoURL  string
 	HeadSHA     string
-	SshKey      string
-	Environment []string
+	SSHKey      string
+	Environment map[string]string
 }
 
 func main() {
@@ -45,30 +45,48 @@ func main() {
 	return
 }
 
-// filterEnvironment returns a slice of strings from ss that begin with "CONSUL_" or "D2C_"
-func filterEnvironment(ss []string) []string {
-	r := []string{}
+// filterEnvironment returns a map of strings from ss that begin with "CONSUL_" or "D2C_"
+func filterEnvironment(ss []string) (map[string]string, error) {
+	r := make(map[string]string)
+
 	for _, s := range ss {
 		if strings.HasPrefix(s, "CONSUL_") || strings.HasPrefix(s, "D2C_") {
-			r = append(r, s)
+			kv := strings.Split(s, "=")
+
+			if len(kv) != 2 {
+				return nil, fmt.Errorf("Error parsing environment variable: '%s'", s)
+			}
+
+			r[kv[0]] = kv[1]
 		}
 	}
-	return r
+
+	return r, nil
 }
 
 func setupEnvironment() {
+	envDefaults := map[string]string{
+		"GITHUB_SECRET": "",
+		"IP":            "127.0.0.1",
+		"PORT":          "8181",
+		"SSH_PRIV_KEY":  "",
+		"SSH_PUB_KEY":   "",
+	}
+
 	viper.SetEnvPrefix("AXIOMATIC")
-	viper.SetDefault("GITHUB_SECRET", "")
-	viper.SetDefault("IP", "127.0.0.1")
-	viper.SetDefault("PORT", "8181")
-	viper.SetDefault("SSH_PRIV_KEY", "")
-	viper.SetDefault("SSH_PUB_KEY", "")
+
+	for key, val := range envDefaults {
+		viper.SetDefault(key, val)
+	}
+
 	viper.AutomaticEnv()
-	viper.BindEnv("GITHUB_SECRET")
-	viper.BindEnv("IP")
-	viper.BindEnv("PORT")
-	viper.BindEnv("SSH_PRIV_KEY")
-	viper.BindEnv("SSH_PUB_KEY")
+
+	for key := range envDefaults {
+		err := viper.BindEnv(key)
+		if err != nil {
+			log.Fatalf("Error setting up environment: %s", err)
+		}
+	}
 }
 
 func isMissingConfiguration() bool {
@@ -96,19 +114,33 @@ func startupMessage() string {
 }
 
 func handleHealth(w http.ResponseWriter, r *http.Request) {
-	log.Println("Good to Serve")
-	fmt.Fprintf(w, "Good to Serve")
+	_, err := fmt.Fprintf(w, "Good to Serve")
+	if err != nil {
+		log.Println(err)
+	} else {
+		log.Println("Good to Serve")
+	}
 	return
 }
 
 func handlePublicKey(w http.ResponseWriter, r *http.Request) {
-	log.Println("Public Key Request")
-	fmt.Fprintf(w, viper.GetString("SSH_PUB_KEY"))
+	_, err := fmt.Fprintf(w, viper.GetString("SSH_PUB_KEY"))
+	if err != nil {
+		log.Println(err)
+	} else {
+		log.Println("Public Key Request")
+	}
 	return
 }
 
 func handleWebhook(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			log.Printf("Error closing body: %s", err)
+		}
+	}()
+
 	payload, err := github.ValidatePayload(r, []byte(viper.GetString("GITHUB_SECRET")))
 	if err != nil {
 		log.Printf("error validating request body: err=%s\n", err)
@@ -127,12 +159,18 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 	case *github.PingEvent:
 		log.Println("GitHub Pinged the Webhook")
 	case *github.PushEvent:
+		env, err := filterEnvironment(os.Environ())
+		if err != nil {
+			log.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
 		jobArgs := NomadJobData{
-			GitRepoName: e.Repo.GetFullName(),
-			GitRepoURL:  e.Repo.GetSSHURL(),
+			GitRepoName: e.Repo.GetName(),
+			GitRepoURL:  e.Repo.GetURL(),
 			HeadSHA:     e.GetAfter(),
-			SshKey:      viper.GetString("SSH_PRIV_KEY"),
-			Environment: filterEnvironment(os.Environ()),
+			SSHKey:      viper.GetString("SSH_PRIV_KEY"),
+			Environment: env,
 		}
 
 		job, err := templateToJob(jobArgs)
@@ -208,28 +246,38 @@ job "dir2consul-{{ .GitRepoName }}" {
         task "dir2consul" {
             artifact {
                 destination = "local/{{ .GitRepoName }}"
-				source = "{{ .GitRepoURL }}"
+                source = "git::{{ .GitRepoURL }}"
                 options {
-                    sshkey = "{{ .SshKey }}"
+                    sshkey = "{{ .SSHKey }}"
                 }
             }
             config {
-                image = "jimrazmus/dir2consul:v1.4.1"
+                image = "code42software/dir2consul:v1.5.0"
             }
             driver = "docker"
             env {
                 D2C_CONSUL_KEY_PREFIX = "services/{{ .GitRepoName }}/config"
-                D2C_DIRECTORY = "local/{{ .GitRepoName }}"
-			{{ range .Environment}}
-				{{.}}
-			{{ end }}
+                D2C_DIRECTORY = "/local/{{ .GitRepoName }}"
+            {{- range $key, $val := .Environment }}
+                {{ $key }} = "{{ $val }}"
+            {{- end }}
             }
             meta {
                 commit-SHA = "{{ .HeadSHA }}"
             }
             vault = {
-                policies = ["consul-{{ .GitRepoName }}-write"]
+                policies = [ "consul-{{ .GitRepoName }}-write" ]
             }
+            template {
+
+                data = "CONSUL_HTTP_TOKEN={_ with secret \"config/creds/{{ .GitRepoName }}-role\" _}{_ .Data.token _}{_ end _}"
+
+                left_delimiter = "{_"
+                right_delimiter = "_}"
+                destination = "secrets/{{ .GitRepoName }}-token.env"
+                env = true
+            }
+
         }
     }
     type = "batch"

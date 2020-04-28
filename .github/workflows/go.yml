@@ -1,54 +1,86 @@
 name: Go
-on: [push]
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - v*
+  pull_request:
+
+env:
+  IMAGE_NAME: code42software/axiomatic
+
 jobs:
 
-  format:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Set up Go
-      uses: actions/setup-go@v1
-      with:
-        go-version: 1.14
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
-    - name: Format
-      run: go fmt .
-  
   test:
-    needs: [format]
-    strategy:
-      matrix:
-        go-version: [1.14.x]
-        platform: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.platform }}
+    runs-on: ubuntu-latest
     steps:
       - name: Set up Go
         uses: actions/setup-go@v1
         with:
-          go-version: ${{ matrix.go-version }}
-      - name: Check out code into the Go module directory
+          go-version: 1.14
+      - name: Set up Go Environment Variables
+        run: |
+          echo "::set-env name=GOPATH::$(dirname $GITHUB_WORKSPACE)"
+          echo "::add-path::$(dirname $GITHUB_WORKSPACE)/bin"
+        shell: bash
+      - name: Check out Source Code
         uses: actions/checkout@v2
       - name: Get dependencies
+        run: go mod download
+      - name: Format
+        run: go fmt .
+      - name: Lint
         run: |
-          go mod download
+          go get -u golang.org/x/lint/golint
+          golint -set_exit_status ./...
+      - name: Errcheck
+        run: |
+          go get -u github.com/kisielk/errcheck
+          errcheck ./...
       - name: Test
         run: |
           go test ./...
           go test -race ./...
 
   coverage:
-    needs: [format,test]
+    needs: [test]
     runs-on: ubuntu-latest
     steps:
-    - name: Set up Go
-      uses: actions/setup-go@v1
-      with:
-        go-version: 1.14
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
-    - name: Measure
-      run: go test -v -covermode=atomic -coverprofile=coverage.out ./...
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1
-      with:
-        file: ./coverage.out
+      - name: Set up Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.14
+      - name: Check out Source Code
+        uses: actions/checkout@v2
+      - name: Measure Coverage
+        run: go test -v -covermode=atomic -coverprofile=coverage.out ./...
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          file: ./coverage.out
+  
+  publish:
+    needs: [test]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Check out Source Code
+        uses: actions/checkout@v2
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DockerHubToken }}" | docker login -u ${{ secrets.DockerHubUsername }} --password-stdin
+      - name: Build and Push Docker Image
+        run: |
+          BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          IMAGE_ID=$(echo $IMAGE_NAME | tr '[A-Z]' '[a-z]')
+          VCS_REF=${{ github.sha }}
+          VCS_URL=https://github.com/${{ github.repository }}
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          [ "$VERSION" == "master" ] && VERSION=rc
+          docker build . \
+            --build-arg BUILD_DATE=$BUILD_DATE \
+            --build-arg VCS_REF=$VCS_REF \
+            --build-arg VCS_URL=$VCS_URL \
+            --build-arg VERSION=$VERSION \
+            --file Dockerfile --tag $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION
