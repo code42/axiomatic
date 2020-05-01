@@ -19,33 +19,33 @@ job "axiomatic" {
         AXIOMATIC_IP = "0.0.0.0"
         AXIOMATIC_PORT = "8181"
         GITHUB_SECRET = "you-deserve-what-you-get"
-        NOMAD_CACERT = "/certs/nomad-ca.pem"
-        NOMAD_CLIENT_CERT = "/certs/cli.pem"
-        NOMAD_CLIENT_KEY = "/certs/cli-key.pem"
+        NOMAD_CACERT = "/secrets/certs/nomad-ca.pem"
+        NOMAD_CLIENT_CERT = "/secrets/certs/cli.pem"
+        NOMAD_CLIENT_KEY = "/secrets/certs/cli-key.pem"
       }
       template {
         data = <<EOH
-      {{ with secret "pki_int/issue/nomad-cluster" "ttl=24h" }}
-      {{ .Data.issuing_ca }}
-      {{ end }}
-      EOH
-        destination = "/certs/nomad-ca.pem"
+{{ with secret "pki_int/issue/nomad-cluster" "ttl=24h" }}
+{{ .Data.issuing_ca }}
+{{ end }}
+EOH
+        destination = "/secrets/certs/nomad-ca.pem"
       }
       template {
         data = <<EOH
-      {{ with secret "pki_int/issue/nomad-cluster" "ttl=24h" }}
-      {{ .Data.certificate }}
-      {{ end }}
-      EOH
-        destination = "/certs/cli.pem"
+{{ with secret "pki_int/issue/nomad-cluster" "ttl=24h" }}
+{{ .Data.certificate }}
+{{ end }}
+EOH
+        destination = "/secrets/certs/cli.pem"
       }
       template {
         data = <<EOH
-      {{ with secret "pki_int/issue/nomad-cluster" "ttl=24h" }}
-      {{ .Data.private_key }}
-      {{ end }}
-      EOH
-        destination = "/certs/cli-key.pem"
+{{ with secret "pki_int/issue/nomad-cluster" "ttl=24h" }}
+{{ .Data.private_key }}
+{{ end }}
+EOH
+        destination = "/secrets/certs/cli-key.pem"
       }
 
       resources {
