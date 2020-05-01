@@ -1,6 +1,6 @@
 job "axiomatic" {
   meta {
-    repo = "http://github.com/jimrazmus/axiomatic"
+    repo = "http://github.com/code42/axiomatic"
     service = "axiomatic"
   }
   datacenters = ["dc1"]
@@ -9,7 +9,7 @@ job "axiomatic" {
       driver = "docker"
 
       config {
-        image = "jimrazmus/axiomatic:rc"
+        image = "code42software/axiomatic:v1.0.1"
         port_map {
           http = 8181
         }
@@ -66,7 +66,7 @@ job "axiomatic" {
         }
       }
       meta {
-        repo = "http://github.com/jimrazmus/axiomatic"
+        repo = "http://github.com/code42/axiomatic"
       }
     }
   }
