@@ -1,4 +1,4 @@
-module github.com/jimrazmus/axiomatic
+module github.com/code42/axiomatic
 
 go 1.14
 
