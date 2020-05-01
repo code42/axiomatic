@@ -167,7 +167,7 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 
 		jobArgs := NomadJobData{
 			GitRepoName: e.Repo.GetName(),
-			GitRepoURL:  e.Repo.GetURL(),
+			GitRepoURL:  e.Repo.GetSSHURL(),
 			HeadSHA:     e.GetAfter(),
 			SSHKey:      viper.GetString("SSH_PRIV_KEY"),
 			Environment: env,
