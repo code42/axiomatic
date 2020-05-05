@@ -258,6 +258,7 @@ job "dir2consul-{{ .GitRepoName }}" {
             env {
                 D2C_CONSUL_KEY_PREFIX = "services/{{ .GitRepoName }}/config"
                 D2C_DIRECTORY = "/local/{{ .GitRepoName }}"
+                CONSUL_HTTP_ADDR = "http://${attr.unique.network.ip-address}:8500"
             {{- range $key, $val := .Environment }}
                 {{ $key }} = "{{ $val }}"
             {{- end }}
@@ -270,7 +271,7 @@ job "dir2consul-{{ .GitRepoName }}" {
             }
             template {
 
-                data = "CONSUL_HTTP_TOKEN={_ with secret \"config/creds/{{ .GitRepoName }}-role\" _}{_ .Data.token _}{_ end _}"
+                data = "CONSUL_HTTP_TOKEN={_ with secret \"consul/creds/{{ .GitRepoName }}-role\" _}{_ .Data.token _}{_ end _}"
 
                 left_delimiter = "{_"
                 right_delimiter = "_}"
