@@ -54,12 +54,6 @@ Axiomatic requires no installation. It ships as a Docker container meant for run
 
 Service health can be confirmed by making a web request to the '/health' path of the service.
 
-## Vault Policy
-
-Axiomatic needs a Vault policy that allows the service to submit batch jobs.
-
-*example policy TBD*
-
 ## Contributing
 
 Please follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification for your commit messages. Commit type options include: feat, fix, build, chore, ci, docs, style, refactor, perf, and test.
