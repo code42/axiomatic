@@ -14,16 +14,16 @@ Axiomatic is a GitHub webhook handler that launches [dir2consul](https://github.
 Axiomatic uses environment variables to override the default configuration values. The Nomad job definition for the Axiomatic service should be adjusted to set these variables.
 
 * AXIOMATIC_GITHUB_SECRET (**required**) is the secret token for validating webhook requests. There is no default value, only sorrow.
-* AXIOMATIC_IP is the IP address to bind. Default = 127.0.0.1
-* AXIOMATIC_PORT is the port number to bind. Default = 8181
+* AXIOMATIC_IP is the IP address to bind. Default = `127.0.0.1`
+* AXIOMATIC_PORT is the port number to bind. Default = `8181`
 * AXIOMATIC_SSH_PRIV_KEY (**required**) is the private ssh key used for cloning repositories. It must be base64 encoded.
 * AXIOMATIC_SSH_PUB_KEY (**required**) is the public ssh key used for cloning repositories.
-* NOMAD_ADDR is the address of the Nomad server. Default = http://127.0.0.1:4646
+* NOMAD_ADDR is the address of the Nomad server. Default = `http://127.0.0.1:4646`
 * NOMAD_CACERT is the path to a PEM encoded CA cert file to use to verify the Nomad server SSL certificate.
 * NOMAD_CAPATH is the path to a directory of PEM encoded CA cert files to verify the Nomad server SSL certificate.
 * NOMAD_CLIENT_CERT Path to a PEM encoded client certificate for TLS authentication to the Nomad server.
 * NOMAD_CLIENT_KEY Path to an unencrypted PEM encoded private key matching the client certificate.
-* NOMAD_NAMESPACE is the target namespace for queries and actions. Default = "default"
+* NOMAD_NAMESPACE is the target namespace for queries and actions. Default = `default`
 * NOMAD_REGION is region of the Nomad servers to forward commands.
 * NOMAD_TOKEN is the SecretID of an ACL token to use to authenticate API requests.
 
