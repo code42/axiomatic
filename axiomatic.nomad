@@ -9,7 +9,7 @@ job "axiomatic" {
       driver = "docker"
 
       config {
-        image = "code42software/axiomatic:v1.0.1"
+        image = "code42software/axiomatic:v1.1.0"
         port_map {
           http = 8181
         }

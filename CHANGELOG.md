@@ -1,19 +1,58 @@
-<a name="unreleased"></a>
-## [Unreleased]
+# Change Log
+
+<a name="v1.1.0"></a>
+## [v1.1.0] - 2020-08-06
+
+### Build
+
+- **deps:** bump github.com/spf13/viper from 1.7.0 to 1.7.1
+- **deps:** bump github.com/spf13/viper from 1.6.3 to 1.7.0
+
+### Chore
+
+- update libraries and golang version ([#31](https://github.com/code42/axiomatic/issues/31))
+
+### Docs
+
+- address some markdown linting issues
+
+### Fix
+
+- Added dir2consul environment variable for the host-local consul agent and fixed the default vault path for consul ACL creds.
+- s/jimrazmus/code42/
+
+### Reverts
+
+- Added two things:
+
+### Pull Requests
+
+- Merge pull request [#33](https://github.com/code42/axiomatic/issues/33) from code42/dependabot/go_modules/github.com/spf13/viper-1.7.1
+- Merge pull request [#28](https://github.com/code42/axiomatic/issues/28) from code42/dependabot/go_modules/github.com/spf13/viper-1.7.0
+- Merge pull request [#27](https://github.com/code42/axiomatic/issues/27) from code42/dm-final-dir2consul-job-adjustment
+- Merge pull request [#24](https://github.com/code42/axiomatic/issues/24) from code42/adjusting-repo-artifact-stanza
+- Merge pull request [#22](https://github.com/code42/axiomatic/issues/22) from code42/code42
+- Merge pull request [#23](https://github.com/code42/axiomatic/issues/23) from code42/change-private-repo
 
 
 <a name="v1.0.1"></a>
 ## [v1.0.1] - 2020-04-27
+
 ### Chore
+
+- release new version
 - add container labels
 
 ### Pull Requests
+
 - Merge pull request [#21](https://github.com/code42/axiomatic/issues/21) from code42/label-container
 
 
 <a name="v1.0.0"></a>
 ## [v1.0.0] - 2020-04-27
+
 ### Build
+
 - add lint and errcheck to workflow
 - Adopt simpler workflow and Docker Hub.
 - remove debug var in favor of IDE debugging
@@ -24,6 +63,7 @@
 - **deps:** bump github.com/spf13/viper from 1.6.2 to 1.6.3
 
 ### Chore
+
 - release new version
 - update and tidy go modules
 - go mod tidy
@@ -32,6 +72,7 @@
 - remove obsolete Makefile
 
 ### Docs
+
 - Remove extra header.
 - Add verbiage for SSH key usage.
 - make configuration section more clear
@@ -42,6 +83,7 @@
 - Add webhook setup instructions.
 
 ### Feat
+
 - Pass consul and d2c env vars to dir2consul
 - Use ssh for repo cloning. Use an ssh key pair for accessing private repos.
 - Pass CONSUL_* env vars to dir2consul.
@@ -54,6 +96,7 @@
 - Pass repo name as the Consul key prefix.
 
 ### Fix
+
 - Update to dir2consul job and related processing ([#15](https://github.com/code42/axiomatic/issues/15))
 - add err checking
 - Update test to match linter change
@@ -77,11 +120,13 @@
 - Remove a trailing brace that was missed.
 
 ### Test
+
 - update AU file for startupMessage test
 - add test for startup message
 - Adjust test for new template function.
 
 ### Pull Requests
+
 - Merge pull request [#20](https://github.com/code42/axiomatic/issues/20) from code42/update-modules
 - Merge pull request [#17](https://github.com/code42/axiomatic/issues/17) from code42/lint-errcheck
 - Merge pull request [#16](https://github.com/code42/axiomatic/issues/16) from code42/workflow-overhaul
@@ -98,6 +143,8 @@
 <a name="0.10.0"></a>
 ## 0.10.0 - 2020-02-18
 
-[Unreleased]: https://github.com/code42/axiomatic/compare/v1.0.1...HEAD
+
+[Unreleased]: https://github.com/code42/axiomatic/compare/v1.1.0...HEAD
+[v1.1.0]: https://github.com/code42/axiomatic/compare/v1.0.1...v1.1.0
 [v1.0.1]: https://github.com/code42/axiomatic/compare/v1.0.0...v1.0.1
 [v1.0.0]: https://github.com/code42/axiomatic/compare/0.10.0...v1.0.0
