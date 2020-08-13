@@ -4,8 +4,7 @@ go 1.14
 
 require (
 	github.com/google/go-github v17.0.0+incompatible
-	github.com/hashicorp/go-multierror v1.1.0 // indirect
-	github.com/hashicorp/nomad v0.12.1
+	github.com/hashicorp/nomad v0.12.2
 	github.com/hashicorp/nomad/api v0.0.0-20200724191311-070742d6f92a
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/pelletier/go-toml v1.8.0 // indirect
