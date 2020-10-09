@@ -3,6 +3,10 @@ job "axiomatic" {
     repo = "http://github.com/code42/axiomatic"
     service = "axiomatic"
   }
+  constraint {
+    attribute = "${node.class}"
+    value     = "default"
+  }
   datacenters = ["dc1"]
   group "axiomatic" {
     task "axiomatic" {
