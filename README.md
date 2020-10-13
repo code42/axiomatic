@@ -48,7 +48,7 @@ Axiomatic requires no installation. It ships as a Docker container meant for run
 1. Add the ssh public key as a repository deploy key
 1. Open the Settings tab for your repo and choose "Webhooks" in the menu
 1. Press the "Add webhook" button
-1. Enter your Axiomatic service URL in the Payload URL field. E.g. "https://axiomatic.example.com/webhook"
+1. Enter your Axiomatic service URL in the Payload URL field. E.g. `https://axiomatic.example.com/webhook`
 1. Enter your Axiomatic github secret in the Secret field
 1. Press the "Add webhook" button
 
@@ -68,4 +68,4 @@ Jim Razmus II
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) file for details.

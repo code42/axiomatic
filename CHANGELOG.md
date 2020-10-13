@@ -1,7 +1,22 @@
 # Change Log
 
-<a name="v1.1.0"></a>
-## [v1.1.0] - 2020-08-06
+## [Unreleased](#unreleased)
+
+### Build
+
+- **deps:** bump golang from 1.15.0-alpine3.12 to 1.15.2-alpine3.12
+- **deps:** bump github.com/hashicorp/nomad from 0.12.3 to 0.12.4
+- **deps:** bump golang from 1.14.6-alpine3.12 to 1.15.0-alpine3.12
+- **deps:** bump actions/setup-go from v1 to v2.1.2
+- **deps:** bump github.com/hashicorp/nomad from 0.12.1 to 0.12.3
+
+### Chore
+
+- automate releases via workflow
+- uplift golang and libs
+- add dependabot configuration
+
+## [v1.1.0](#v1.1.0) - 2020-08-06
 
 ### Build
 
@@ -10,6 +25,7 @@
 
 ### Chore
 
+- release new version
 - update libraries and golang version ([#31](https://github.com/code42/axiomatic/issues/31))
 
 ### Docs
@@ -34,9 +50,7 @@
 - Merge pull request [#22](https://github.com/code42/axiomatic/issues/22) from code42/code42
 - Merge pull request [#23](https://github.com/code42/axiomatic/issues/23) from code42/change-private-repo
 
-
-<a name="v1.0.1"></a>
-## [v1.0.1] - 2020-04-27
+## [v1.0.1](#v1.0.1) - 2020-04-27
 
 ### Chore
 
@@ -47,9 +61,7 @@
 
 - Merge pull request [#21](https://github.com/code42/axiomatic/issues/21) from code42/label-container
 
-
-<a name="v1.0.0"></a>
-## [v1.0.0] - 2020-04-27
+## [v1.0.0](#v1.0.0) - 2020-04-27
 
 ### Build
 
@@ -139,10 +151,7 @@
 - Merge pull request [#7](https://github.com/code42/axiomatic/issues/7) from c42-dana-mckiernan/master
 - Merge pull request [#6](https://github.com/code42/axiomatic/issues/6) from jimrazmus/use-nomad-api
 
-
-<a name="0.10.0"></a>
-## 0.10.0 - 2020-02-18
-
+## [0.10.0](#0.10.0) - 2020-02-18
 
 [Unreleased]: https://github.com/code42/axiomatic/compare/v1.1.0...HEAD
 [v1.1.0]: https://github.com/code42/axiomatic/compare/v1.0.1...v1.1.0
