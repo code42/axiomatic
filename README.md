@@ -33,6 +33,8 @@ Axiomatic passes environment variables, beginning with "CONSUL_" or "D2C_", thro
 
 Axiomatic requires no installation. It ships as a Docker container meant for running as a service.
 
+## Usage
+
 ### Run the service on Nomad
 
 ```bash
