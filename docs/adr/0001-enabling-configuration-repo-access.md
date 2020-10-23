@@ -10,6 +10,8 @@ How should Axiomatic ensure that dir2consul, when run as a Nomad batch job, has 
 
 ## Decision Drivers
 
+* GitHub prevents deployment key reuse. The SSH key can only be attached to one repo.
+* There is no appetite for spending money on a Service User account.
 * …
 
 ## Considered Options
