@@ -17,7 +17,7 @@ How should Axiomatic ensure that dir2consul, when run as a Nomad batch job, has 
 ## Considered Options
 
 1. Service User: A service user is created within the GitHub organization along with an SSH key pair. The service user is granted access to the configuration repos. The Nomad job definition for dir2consul is given the service users SSH key.
-1. Axiomatic Retrieves Deployment Keys from Vault: Repo specific [deploy keys](https://docs.github.com/en/free-pro-team@latest/developers/overview/managing-deploy-keys#deploy-keys) are stored in Vault. Axiomatic retrieves the appropriate deploy key and adds it to the Nomad job definition for dir2consul.
+1. Axiomatic Retrieves Deployment Keys from Vault: Repo specific deploy keys are stored in Vault. Axiomatic retrieves the appropriate deploy key and adds it to the Nomad job definition for dir2consul.
 1. Nomad Retrieves Deployment Keys from Vault: Repo specific deploy keys are stored in Vault. Nomad retrieves the appropriate deploy key and makes it available to the dir2consul batch job.
 1. A Team Member becomes the Service User: Similiar to the 'Service User' option except that access to configuration repos is granted implicitly as the team member already has access.
 
@@ -55,7 +55,7 @@ Chosen option: …
 * Good, because Axiomatic and dir2consul are freed of deploy key knowledge
 * Good, because Axiomatic and dir2consul do not need access to Vault
 * Good, because it leverages the Vault access that Nomad already has available
-* Bad, because Nomad currently can't do it. Nomad has to retrieve the deploy key before it attempts the git clone via the jobs 'artifact' stanza. Hashicorp is aware and already working on the issue [link???]()
+* Bad, because Nomad currently can't do it. Nomad has to retrieve the deploy key before it attempts the git clone via the jobs 'artifact' stanza. Hashicorp is aware and already working on the issue. Reference [Nomad Github Issues](#nomad-github-issues)
 
 ### A Team Member becomes the Service User
 
@@ -63,3 +63,15 @@ Chosen option: …
 * Bad, because the audit trail always points back to the team member
 * Bad, because it puts the team member in a bad spot if a security event occurrs
 * Bad, because it likely violates our security standards
+
+## Links
+
+### Deploy Keys
+
+* [Managing Deploy Keys](https://docs.github.com/en/free-pro-team@latest/developers/overview/managing-deploy-keys#deploy-keys)
+
+### Nomad GitHub Issues
+
+* [Cannot download private git repo with artifact stanza](https://github.com/hashicorp/nomad/issues/2818)
+* [vault secrets in artifact stanza](https://github.com/hashicorp/nomad/issues/3854)
+* [allow passing GIT_SSH variables to go-getter](https://github.com/hashicorp/nomad/issues/6619)
