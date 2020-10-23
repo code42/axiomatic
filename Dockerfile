@@ -1,7 +1,7 @@
 ############################
 # STEP 1 build executable binary
 ############################
-FROM golang:1.14.0-alpine3.11 as builder
+FROM golang:1.15.3-alpine3.12 as builder
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
@@ -27,7 +27,7 @@ WORKDIR $GOPATH/src/mypackage/myapp/
 COPY go.* ./
 RUN go mod download
 
-COPY *.go ./
+COPY . ./
 
 # Build the binary
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
@@ -39,8 +39,17 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 ############################
 FROM scratch
 
-LABEL "repository"="https://github.com/jimrazmus/axiomatic"
-LABEL "maintainer"="Jim Razmus II <jim.razmus@gmail.com>"
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VCS_URL
+ARG VERSION
+
+LABEL "org.opencontainers.image.authors"="Empower Rangers <empower-rangers@code42.com>"
+LABEL "org.opencontainers.image.created"=$BUILD_DATE
+LABEL "org.opencontainers.image.licenses"="https://github.com/code42/axiomatic/blob/master/LICENSE.md"
+LABEL "org.opencontainers.image.revision"=$VCS_REF
+LABEL "org.opencontainers.image.source"=$VCS_URL
+LABEL "org.opencontainers.image.version"=$VERSION
 
 # Import from builder.
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo

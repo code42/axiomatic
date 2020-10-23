@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"html/template"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -12,6 +11,7 @@ import (
 	"reflect"
 	"testing"
 	"testing/quick"
+	"text/template"
 
 	"github.com/spf13/viper"
 )
@@ -37,7 +37,10 @@ func TestHandleHealth(t *testing.T) {
 
 func TestPublicKey(t *testing.T) {
 	answer := "an ssh public key"
-	os.Setenv("AXIOMATIC_SSH_PUB_KEY", answer)
+	err := os.Setenv("AXIOMATIC_SSH_PUB_KEY", answer)
+	if err != nil {
+		t.Fatal(err)
+	}
 	setupEnvironment()
 	req, err := http.NewRequest("GET", "/publickey", nil)
 	if err != nil {
@@ -61,8 +64,8 @@ func TestTemplateToJob(t *testing.T) {
 			GitRepoName: a,
 			GitRepoURL:  b,
 			HeadSHA:     c,
-			SshKey:      d,
-			Environment: []string{"CONSUL_TEST=1"},
+			SSHKey:      d,
+			Environment: map[string]string{"CONSUL_TEST": "1"},
 		}
 		_, err := templateToJob(jobArgs)
 		if err != nil {
@@ -76,54 +79,75 @@ func TestTemplateToJob(t *testing.T) {
 	}
 }
 
-func TestFilterEnvironment(t *testing.T) {
+func TestFilterEnvironmentSucceeds(t *testing.T) {
 	cases := []struct {
 		name string
 		ss   []string
-		rs   []string
+		rs   map[string]string
 	}{
 		{
 			"One Element Match",
 			[]string{"CONSUL_A=a"},
-			[]string{"CONSUL_A=a"},
+			map[string]string{"CONSUL_A": "a"},
 		},
 		{
 			"Two Element Match",
 			[]string{"CONSUL_A=a", "CONSUL_b=b"},
-			[]string{"CONSUL_A=a", "CONSUL_b=b"},
+			map[string]string{"CONSUL_A": "a", "CONSUL_b": "b"},
 		},
 		{
 			"Leading Element Match",
 			[]string{"CONSUL_1=1", "a=a", "b=b"},
-			[]string{"CONSUL_1=1"},
+			map[string]string{"CONSUL_1": "1"},
 		},
 		{
 			"Nested Element Match",
 			[]string{"a=a", "CONSUL_1=1", "b=b"},
-			[]string{"CONSUL_1=1"},
+			map[string]string{"CONSUL_1": "1"},
 		},
 		{
 			"Trailing Element Match",
 			[]string{"a=a", "b=b", "CONSUL_1=1"},
-			[]string{"CONSUL_1=1"},
+			map[string]string{"CONSUL_1": "1"},
 		},
 		{
 			"No Element Match",
 			[]string{"a=a", "b=b", "CONSULA_A=a"},
-			[]string{},
+			map[string]string{},
 		},
 		{
 			"One d2c Element Match",
 			[]string{"a=a", "b=b", "D2C_A=a"},
-			[]string{"D2C_A=a"},
+			map[string]string{"D2C_A": "a"},
 		},
 	}
 
 	for i, tc := range cases {
 		t.Run(fmt.Sprintf("%d_%s", i, tc.name), func(t *testing.T) {
-			got := filterEnvironment(tc.ss)
+			got, _ := filterEnvironment(tc.ss)
 			if !reflect.DeepEqual(got, tc.rs) {
 				t.Errorf("got (%+v) want (%+v)", got, tc.rs)
+			}
+		})
+	}
+}
+
+func TestFilterEnvironmentErrors(t *testing.T) {
+	cases := []struct {
+		name string
+		ss   []string
+	}{
+		{
+			"Two equals errors",
+			[]string{"CONSUL_A=a=c"},
+		},
+	}
+
+	for i, tc := range cases {
+		t.Run(fmt.Sprintf("%d_%s", i, tc.name), func(t *testing.T) {
+			_, err := filterEnvironment(tc.ss)
+			if err == nil {
+				t.Error("expected an error")
 			}
 		})
 	}
@@ -154,9 +178,19 @@ func TestIsMissingConfiguration(t *testing.T) {
 	if isMissingConfiguration() != true {
 		t.Error("expected: (true) got: (false)")
 	}
-	os.Setenv("AXIOMATIC_GITHUB_SECRET", "testing")
-	os.Setenv("AXIOMATIC_SSH_PRIV_KEY", "testing")
-	os.Setenv("AXIOMATIC_SSH_PUB_KEY", "testing")
+	err := os.Setenv("AXIOMATIC_GITHUB_SECRET", "testing")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.Setenv("AXIOMATIC_SSH_PRIV_KEY", "testing")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.Setenv("AXIOMATIC_SSH_PUB_KEY", "testing")
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if isMissingConfiguration() != false {
 		t.Error("expected: (false) got: (true)")
 	}
@@ -164,11 +198,17 @@ func TestIsMissingConfiguration(t *testing.T) {
 
 func TestStartupMessage(t *testing.T) {
 	os.Clearenv()
-	os.Setenv("TEST", "TestStartupMessage")
+	err := os.Setenv("TEST", "TestStartupMessage")
+	if err != nil {
+		t.Fatal(err)
+	}
 	actual := []byte(startupMessage())
 	auFile := "testdata/TestStartupMessage.golden"
 	if *update {
-		ioutil.WriteFile(auFile, actual, 0644)
+		err = ioutil.WriteFile(auFile, actual, 0644)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 	golden, err := ioutil.ReadFile(auFile)
 	if err != nil {
