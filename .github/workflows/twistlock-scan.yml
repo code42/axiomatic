@@ -1,0 +1,22 @@
+name: Twistlock Scan
+
+on:
+  push:
+
+env:
+  IMAGE_NAME: code42software/dir2consul
+
+jobs: 
+  twistlock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Source Code
+        uses: actions/checkout@v2
+      - name: Download the Twistlock CLI
+        run: |
+          curl -k -u ${{ secrets.TwistlockUsername }}:${{ secrets.TwistlockPassword }} --output ./twistcli ${{ secrets.TwistlockConsole }}/api/v1/util/twistcli
+          sudo chmod a+x ./twistcli
+      - name: Build Docker Image
+        run: docker build . --file Dockerfile --tag $IMAGE_NAME:${{ github.sha }}
+      - name: Scan the Image
+        run: ./twistcli images scan --details -address ${{ secrets.TwistlockConsole }} -u ${{ secrets.TwistlockUsername }} -p ${{ secrets.TwistlockPassword }} $IMAGE_NAME:${{ github.sha }}
