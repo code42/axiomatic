@@ -8,18 +8,18 @@
 
 How should Axiomatic ensure that dir2consul, when run as a Nomad batch job, has access to configuration repos hosted on GitHub?
 
-## Decision Drivers
-
-* GitHub prevents deployment key reuse. The SSH key can only be attached to one repo.
-* There is no appetite for spending money on a Service User account.
-* …
-
 ## Considered Options
 
 1. Service User: A service user is created within the GitHub organization along with an SSH key pair. The service user is granted access to the configuration repos. The Nomad job definition for dir2consul is given the service users SSH key.
 1. Axiomatic Retrieves Deployment Keys from Vault: Repo specific deploy keys are stored in Vault. Axiomatic retrieves the appropriate deploy key and adds it to the Nomad job definition for dir2consul.
 1. Nomad Retrieves Deployment Keys from Vault: Repo specific deploy keys are stored in Vault. Nomad retrieves the appropriate deploy key and makes it available to the dir2consul batch job.
 1. A Team Member becomes the Service User: Similiar to the 'Service User' option except that access to configuration repos is granted implicitly as the team member already has access.
+
+## Decision Drivers
+
+* GitHub prevents deployment key reuse. The SSH key can only be attached to one repo.
+* There is no appetite for spending money on Service User accounts.
+* …
 
 ## Decision Outcome
 
@@ -42,6 +42,7 @@ Chosen option: …
 * Bad, because we are billed for every user account
 * Bad, because the service user becomes a single point of failure
 * Bad, because the service user may be used in other contexts where config repo access is not acceptable
+* Bad, because the lack of fine grained permissions capability leads to the creating of multiple service user accounts
 
 ### Axiomatic Retrieves Deployment Keys from Vault
 
