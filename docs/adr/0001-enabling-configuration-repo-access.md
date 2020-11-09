@@ -43,6 +43,8 @@ Chosen option: …
 * Bad, because the service user becomes a single point of failure
 * Bad, because the service user may be used in other contexts where config repo access is not acceptable
 * Bad, because the lack of fine grained permissions capability leads to the creating of multiple service user accounts
+* Good/Bad, because a service user may have write access to a repo
+* Good/Bad, because a service user may provide GitHub API access
 
 ### Axiomatic Retrieves Deployment Keys from Vault
 
@@ -50,6 +52,8 @@ Chosen option: …
 * Good, because the keys are securely stored in the centralized Vault making rotation easy
 * Bad, because it increases the work to set up a configuration repo (create the SSH key, add it to the GitHub repo, add it to Vault)
 * Bad, because it requires Axiomatic to have knowledge of deploy keys and access to Vault
+* Good/Bad, because a deploy key can only provide limited write access to a repo
+* Good/Bad, because a deploy key does not provide any GitHub API access
 
 ### Nomad Retrieves Deployment Keys from Vault
 
@@ -57,6 +61,8 @@ Chosen option: …
 * Good, because Axiomatic and dir2consul do not need access to Vault
 * Good, because it leverages the Vault access that Nomad already has available
 * Bad, because Nomad currently can't do it. Nomad has to retrieve the deploy key before it attempts the git clone via the jobs 'artifact' stanza. Hashicorp is aware and already working on the issue. Reference [Nomad Github Issues](#nomad-github-issues)
+* Good/Bad, because a deploy key can only provide limited write access to a repo
+* Good/Bad, because a deploy key does not provide any GitHub API access
 
 ### A Team Member becomes the Service User
 
