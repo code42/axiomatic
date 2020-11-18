@@ -24,7 +24,7 @@ type NomadJobData struct {
 	GitRepoName string
 	GitRepoURL  string
 	HeadSHA     string
-	SSHKey      string
+	DeployKey   string
 	Environment map[string]string
 }
 
@@ -169,7 +169,7 @@ func handleWebhook(w http.ResponseWriter, r *http.Request) {
 			GitRepoName: e.Repo.GetName(),
 			GitRepoURL:  e.Repo.GetSSHURL(),
 			HeadSHA:     e.GetAfter(),
-			SSHKey:      viper.GetString("SSH_PRIV_KEY"),
+			DeployKey:   viper.GetString("SSH_PRIV_KEY"),
 			Environment: env,
 		}
 
