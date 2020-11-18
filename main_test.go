@@ -8,8 +8,6 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
-	"testing/quick"
-	"text/template"
 )
 
 // go test -update
@@ -28,28 +26,6 @@ func TestHandleHealth(t *testing.T) {
 	}
 	if rec.Body.String() != "Good to Serve" {
 		t.Errorf("handleHealth returned (%v) instead of (%v)", rec.Body.String(), "Good to Serve")
-	}
-}
-
-func TestTemplateToJob(t *testing.T) {
-	jobTemplate = template.Must(template.New("job").Parse(templateNomadJob()))
-	f := func(a string, b string, c string, d string) bool {
-		jobArgs := NomadJobData{
-			GitRepoName: a,
-			GitRepoURL:  b,
-			HeadSHA:     c,
-			DeployKey:   d,
-			Environment: map[string]string{"CONSUL_TEST": "1"},
-		}
-		_, err := templateToJob(jobArgs)
-		if err != nil {
-			t.Error(err)
-		}
-		return true
-	}
-	err := quick.Check(f, nil)
-	if err != nil {
-		t.Error(err)
 	}
 }
 
