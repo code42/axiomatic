@@ -35,28 +35,6 @@ func TestHandleHealth(t *testing.T) {
 	}
 }
 
-func TestPublicKey(t *testing.T) {
-	answer := "an ssh public key"
-	err := os.Setenv("AXIOMATIC_SSH_PUB_KEY", answer)
-	if err != nil {
-		t.Fatal(err)
-	}
-	setupEnvironment()
-	req, err := http.NewRequest("GET", "/publickey", nil)
-	if err != nil {
-		t.Error(err)
-	}
-	rec := httptest.NewRecorder()
-	handler := http.HandlerFunc(handlePublicKey)
-	handler.ServeHTTP(rec, req)
-	if status := rec.Code; status != http.StatusOK {
-		t.Errorf("handlePublicKey returned %v instead of %v", status, http.StatusOK)
-	}
-	if rec.Body.String() != "an ssh public key" {
-		t.Errorf("handlePublicKey returned (%v) instead of (%v)", rec.Body.String(), answer)
-	}
-}
-
 func TestTemplateToJob(t *testing.T) {
 	jobTemplate = template.Must(template.New("job").Parse(templateNomadJob()))
 	f := func(a string, b string, c string, d string) bool {
