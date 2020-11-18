@@ -248,7 +248,7 @@ job "dir2consul-{{ .GitRepoName }}" {
                 destination = "local/{{ .GitRepoName }}"
                 source = "{{ .GitRepoURL }}"
                 options {
-                    sshkey = "{{ .SSHKey }}"
+                    sshkey = "{{ .DeployKey }}"
                 }
             }
             config {
