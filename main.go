@@ -41,7 +41,6 @@ func main() {
 	http.HandleFunc("/webhook", handleWebhook)
 
 	log.Fatal(http.ListenAndServe(viper.GetString("IP")+":"+viper.GetString("PORT"), nil))
-	return
 }
 
 // filterEnvironment returns a map of strings from ss that begin with "CONSUL_" or "D2C_"
@@ -119,7 +118,6 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 	} else {
 		log.Println("Good to Serve")
 	}
-	return
 }
 
 func handleWebhook(w http.ResponseWriter, r *http.Request) {
