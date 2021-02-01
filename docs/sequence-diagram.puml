@@ -1,0 +1,13 @@
+@startuml Sequence Diagram
+
+Staff -> GitHub: Push Commit
+GitHub -> Axiomatic: Calls Webhook
+Axiomatic -> Vault: Request Deploy Key
+Vault -> Axiomatic: Send Deploy Key
+Axiomatic -> Nomad: Submit Dir2Consul Batch Job
+Nomad -> Dir2Consul: Runs Batch Job
+Dir2Consul -> GitHub: Clone Repository with Deploy Key
+GitHub -> Dir2Consul: Send Repository
+Dir2Consul -> Consul: Put Configuration Data
+
+@enduml
