@@ -454,8 +454,8 @@ github.com/hashicorp/memberlist v0.2.2 h1:5+RffWKwqJ71YPu9mWsF7ZOscZmwfasdA8kbdC
 github.com/hashicorp/memberlist v0.2.2/go.mod h1:MS2lj3INKhZjWNqd3N0m3J+Jxf3DAOnAH9VT3Sh9MUE=
 github.com/hashicorp/net-rpc-msgpackrpc v0.0.0-20151116020338-a14192a58a69 h1:lc3c72qGlIMDqQpQH82Y4vaglRMMFdJbziYWriR4UcE=
 github.com/hashicorp/net-rpc-msgpackrpc v0.0.0-20151116020338-a14192a58a69/go.mod h1:/z+jUGRBlwVpUZfjute9jWaF6/HuhjuFQuL1YXzVD1Q=
-github.com/hashicorp/nomad v0.12.9 h1:43K/bgMHd78+Umk1c3HnjvdDQujcjqOvnNK0WXk+Y9U=
-github.com/hashicorp/nomad v0.12.9/go.mod h1:XIaOhhBah3YgM6WnGtUbnMrF2s5wsRp40WBYc4irsSE=
+github.com/hashicorp/nomad v0.12.10 h1:C9ZVMk4fzshZdx2m5Ql+J9aEMVznNyduG3nQC+VkQ0k=
+github.com/hashicorp/nomad v0.12.10/go.mod h1:XIaOhhBah3YgM6WnGtUbnMrF2s5wsRp40WBYc4irsSE=
 github.com/hashicorp/nomad/api v0.0.0-20200529203653-c4416b26d3eb/go.mod h1:DCi2k47yuUDzf2qWAK8E1RVmWgz/lc0jZQeEnICTxmY=
 github.com/hashicorp/nomad/api v0.0.0-20200827193552-7fdd6431b06e h1:ozSaxPVvuev1PBn38bS8jFUfCHfuZpX8dXV+515QNmQ=
 github.com/hashicorp/nomad/api v0.0.0-20200827193552-7fdd6431b06e/go.mod h1:DCi2k47yuUDzf2qWAK8E1RVmWgz/lc0jZQeEnICTxmY=
