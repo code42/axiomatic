@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/google/go-github v17.0.0+incompatible
-	github.com/hashicorp/nomad v0.12.10
+	github.com/hashicorp/nomad v0.12.11
 	github.com/hashicorp/nomad/api v0.0.0-20200827193552-7fdd6431b06e
 	github.com/magiconair/properties v1.8.2 // indirect
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
