@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out Source Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
       - name: Download the Twistlock CLI
         run: |
           curl -k -u ${{ secrets.TwistlockUsername }}:${{ secrets.TwistlockPassword }} --output ./twistcli ${{ secrets.TwistlockConsole }}/api/v1/util/twistcli
