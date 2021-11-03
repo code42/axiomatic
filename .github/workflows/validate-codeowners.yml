@@ -10,7 +10,7 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Check out Source Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.4.0
 
       - uses: mszostok/codeowners-validator@v0.6.0
         if: github.event.pull_request.head.repo.full_name == github.repository
