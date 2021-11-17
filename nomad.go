@@ -66,6 +66,10 @@ func templateNomadJob() string {
 	const jobTemplate = `
 job "dir2consul-{{ .GitRepoName }}" {
     datacenters = ["dc1"]
+    constraint {
+        attribute = "${node.class}"
+        value     = "default"
+    }
     region = "global"
     group "dir2consul" {
         task "dir2consul" {
