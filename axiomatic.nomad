@@ -23,33 +23,15 @@ job "axiomatic" {
         AXIOMATIC_IP = "0.0.0.0"
         AXIOMATIC_PORT = "8181"
         GITHUB_SECRET = "you-deserve-what-you-get"
-        NOMAD_CACERT = "/local/certs/nomad-ca.pem"
-        NOMAD_CLIENT_CERT = "/local/certs/cli.pem"
-        NOMAD_CLIENT_KEY = "/local/certs/cli-key.pem"
       }
       template {
         data = <<EOH
-{{ with secret "pki_int/issue/nomad-cluster" "ttl=24h" }}
-{{ .Data.issuing_ca }}
+NOMAD_TOKEN={{ with secret "secrets/team/empower-rangers/nomad-bootstrap-token" }}
+{{ .Data.token }}
 {{ end }}
 EOH
-        destination = "/local/certs/nomad-ca.pem"
-      }
-      template {
-        data = <<EOH
-{{ with secret "pki_int/issue/nomad-cluster" "ttl=24h" }}
-{{ .Data.certificate }}
-{{ end }}
-EOH
-        destination = "/local/certs/cli.pem"
-      }
-      template {
-        data = <<EOH
-{{ with secret "pki_int/issue/nomad-cluster" "ttl=24h" }}
-{{ .Data.private_key }}
-{{ end }}
-EOH
-        destination = "/local/certs/cli-key.pem"
+        destination = "local/secrets.env"
+        env         = true
       }
 
       resources {
@@ -77,6 +59,6 @@ EOH
   type = "service"
 
   vault = {
-    policies = ["tls-policy"]
+    policies = ["secrets-team-empower-rangers-read"]
   }
 }
