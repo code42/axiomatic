@@ -1,8 +1,8 @@
-job "axiomatic" {
+job "axiomatic-hashi" {
   meta {
     repo = "http://github.com/code42/axiomatic"
     service = "axiomatic"
-    repo_serving = "http://github.com/code42/terraform-base-infrastructure-config"
+    repo_serving = "http://github.com/code42/cfg-hashi-versions"
   }
   constraint {
     attribute = "${node.class}"
@@ -45,7 +45,7 @@ EOH
       }
 
       service {
-        name = "axiomatic"
+        name = "axiomatic-hashi"
         port = "http"
         tags = [ "proxy" ]
       }
