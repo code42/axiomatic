@@ -5,11 +5,4 @@ on:
 
 jobs:
   lint-markdown:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out Source Code
-        uses: actions/checkout@v3
-      - name: markdownlint-cli
-        uses: nosborn/github-action-markdown-cli@v3.0.1
-        with:
-          files: .
+    uses: code42/github-workflow-library/.github/workflows/lint-markdown.yml@master
