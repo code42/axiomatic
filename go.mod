@@ -7,5 +7,6 @@ require (
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/hashicorp/nomad v1.4.3
 	github.com/hashicorp/nomad/api v0.0.0-20221006174558-2aa7e66bdb52
-	github.com/spf13/viper v1.14.0
+	github.com/pelletier/go-toml v1.9.5 // indirect
+	github.com/spf13/viper v1.15.0
 )
